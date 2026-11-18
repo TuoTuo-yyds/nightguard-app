@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 
 :root{
@@ -96,8 +98,13 @@ button{font-family:inherit}
 /* 首页 */
 #p-home{position:absolute;inset:0;display:none}
 #p-home.active{display:block}
-.map-svg{position:absolute;inset:0;width:100%;height:100%}
-.map-veil{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 40%,transparent 26%,rgba(3,7,12,.55) 100%),linear-gradient(180deg,rgba(3,7,12,.92) 0%,transparent 20%,transparent 60%,rgba(3,7,12,.96) 100%)}
+.map-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+#realmap{position:absolute;left:-25%;top:-25%;width:150%;height:150%;z-index:2;opacity:0;transition:opacity .5s;transform-origin:50% 50%;background:#060e16}
+#realmap.ready{opacity:1}
+#realmap .leaflet-container{background:#060e16}
+#realmap .ng-me-wrap{background:transparent;border:none}
+#realmap .ng-me-arrow{width:40px;height:40px;transform-origin:50% 50%;filter:drop-shadow(0 0 8px rgba(37,229,205,.9))}
+.map-veil{position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at 50% 40%,transparent 26%,rgba(3,7,12,.55) 100%),linear-gradient(180deg,rgba(3,7,12,.92) 0%,transparent 20%,transparent 60%,rgba(3,7,12,.96) 100%)}
 .map-glow{filter:drop-shadow(0 0 6px rgba(37,229,205,.8))}
 .lamp-glow{filter:drop-shadow(0 0 7px rgba(255,178,80,.9))}
 .cam-glow{filter:drop-shadow(0 0 5px rgba(120,210,255,.6))}
@@ -120,7 +127,8 @@ button{font-family:inherit}
 .radar .pulse{position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(37,229,205,.5);animation:pulse 3s ease-out infinite}
 @keyframes pulse{0%{transform:scale(.75);opacity:.8}100%{transform:scale(1.12);opacity:0}}
 .guard-status{position:absolute;top:118px;left:0;right:0;z-index:30;display:flex;justify-content:center}
-.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:#d6f5f0;background:rgba(6,14,20,.78);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px)}
+.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:#d6f5f0;background:rgba(6,14,20,.78);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);cursor:pointer;font-family:inherit;transition:.2s}
+.guard-status .gs-pill.active{border-color:rgba(37,229,205,.75);background:rgba(9,32,29,.85);box-shadow:0 0 16px rgba(37,229,205,.25)}
 .guard-status .gs-pill i{width:7px;height:7px;border-radius:50%;background:#3ddc97;box-shadow:0 0 9px #3ddc97;animation:blink 1.6s infinite}
 .guard-status .gs-pill b{color:var(--cyan)}
 .map-legend{position:absolute;top:496px;left:18px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-size:10.5px;color:#b6c6d4;background:rgba(6,14,20,.68);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:11px 13px;backdrop-filter:blur(8px)}
@@ -495,6 +503,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
               <g class="lamp-glow"><circle cx="330" cy="230" r="4.5" fill="#ff5a4d"/><circle cx="330" cy="230" r="11" fill="none" stroke="#ff5a4d" stroke-width="1" opacity=".5"/></g>
               <text x="284" y="252" fill="#ff8a80" font-size="10" opacity=".9">照明不足</text>
             </svg>
+            <div id="realmap"></div>
             <div class="map-veil"></div>
 
             <div class="statusbar abs">
@@ -508,7 +517,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
               <button class="hbtn" onclick="toast('守护设置：SOS 倒计时 3 秒 · 夜间模式已开启')" title="设置"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
             </div>
 
-            <div class="guard-status"><div class="gs-pill"><i></i>守护中 · 当前所在 <b>文华路夜间路段</b></div></div>
+            <div class="guard-status"><button class="gs-pill" onclick="startNav()" id="nav-btn" title="点击开启实时定位导航"><i></i><span id="nav-status">点击开启实时导航 · 跟随位置与朝向</span></button></div>
 
             <div class="radar">
               <div class="cross"><i></i><i></i></div>
@@ -782,6 +791,88 @@ function go(id){
   if(id==='cam') startVF(); else stopVF();
 }
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+
+/* ================= 实时定位导航 ================= */
+let ngMap = null, ngMarker = null, ngWatch = null, navOn = false, curHeading = 0;
+const DARK_TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+function navStatus(txt, on){
+  $('nav-status').textContent = txt;
+  $('nav-btn').classList.toggle('active', !!on);
+}
+function startNav(){
+  if(navOn){ stopNav(); return; }
+  if(typeof L === 'undefined'){ toast('地图库未加载，请检查网络后重试'); return; }
+  if(!navigator.geolocation){ toast('当前设备不支持定位'); return; }
+  navStatus('正在获取定位…', true);
+  navigator.geolocation.getCurrentPosition(
+    p => {
+      initNgMap(p.coords.latitude, p.coords.longitude);
+      navStatus('导航中 · 跟随实时位置', true);
+      ngWatch = navigator.geolocation.watchPosition(
+        pos => updateNgPos(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+        () => {},
+        {enableHighAccuracy:true, maximumAge:2000, timeout:15000}
+      );
+      enableCompass();
+    },
+    err => {
+      navOn = false;
+      navStatus('定位失败 · 点击重试', false);
+      toast(err.code===1 ? '定位权限被拒绝，请在浏览器设置中允许' : '定位失败，请到户外或检查网络');
+    },
+    {enableHighAccuracy:true, timeout:15000}
+  );
+  navOn = true;
+}
+function initNgMap(lat, lng){
+  if(!ngMap){
+    ngMap = L.map('realmap', {zoomControl:false, attributionControl:false}).setView([lat,lng], 18);
+    L.tileLayer(DARK_TILE, {subdomains:'abcd', maxZoom:20}).addTo(ngMap);
+    const icon = L.divIcon({
+      className:'ng-me-wrap', iconSize:[40,40], iconAnchor:[20,20],
+      html:'<div class="ng-me-arrow" id="ng-arrow"><svg viewBox="0 0 40 40"><path d="M20 2 L33 34 L20 27 L7 34 Z" fill="#25e5cd" stroke="#eafffb" stroke-width="2.2" stroke-linejoin="round"/></svg></div>'
+    });
+    ngMarker = L.marker([lat,lng], {icon:icon}).addTo(ngMap);
+    $('realmap').classList.add('ready');
+  } else {
+    ngMap.setView([lat,lng], 18);
+    ngMarker.setLatLng([lat,lng]);
+  }
+  L.circleMarker([lat,lng], {radius:9, color:'#25e5cd', weight:1, opacity:.5, fillColor:'#25e5cd', fillOpacity:.12}).addTo(ngMap).bindPopup('当前位置');
+}
+function updateNgPos(lat, lng, acc){
+  if(!ngMap) return;
+  ngMap.setView([lat,lng], ngMap.getZoom(), {animate:true, duration:.6});
+  ngMarker.setLatLng([lat,lng]);
+  navStatus('导航中 · 精度 ±'+Math.round(acc)+'m', true);
+}
+function onOrient(e){
+  let h = null;
+  if(typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;
+  else if(e.alpha != null) h = (360 - e.alpha) % 360;
+  if(h == null) return;
+  curHeading = h;
+  const rm = $('realmap');
+  if(rm) rm.style.transform = 'rotate(' + (-h) + 'deg)';
+  const arrow = $('ng-arrow');
+  if(arrow) arrow.style.transform = 'rotate(' + h + 'deg)';
+}
+function enableCompass(){
+  const DOE = window.DeviceOrientationEvent;
+  if(DOE && typeof DOE.requestPermission === 'function'){
+    DOE.requestPermission().then(r => { if(r==='granted') window.addEventListener('deviceorientation', onOrient); }).catch(()=>{});
+  } else if(DOE){
+    window.addEventListener('deviceorientation', onOrient);
+  }
+}
+function stopNav(){
+  if(ngWatch){ navigator.geolocation.clearWatch(ngWatch); ngWatch = null; }
+  window.removeEventListener('deviceorientation', onOrient);
+  navOn = false;
+  const rm = $('realmap'); if(rm) rm.style.transform = '';
+  navStatus('点击开启实时导航 · 跟随位置与朝向', false);
+  toast('实时导航已关闭');
+}
 
 /* ================= 首页图层 ================= */
 let layer = 0;
