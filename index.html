@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=01e50bc7">
-<script src="leaflet.js?v=01e50bc7"></script>
+<link rel="stylesheet" href="leaflet.css?v=7b5e7014">
+<script src="leaflet.js?v=7b5e7014"></script>
 <style>
 
 :root{
@@ -152,6 +152,23 @@ button{font-family:inherit}
 .route-card .rc-note.warn{color:#ffb057}
 .route-card .rc-note.good{color:#5ff0dd}
 .route-go{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;color:var(--cyan);border:1px solid rgba(37,229,205,.45);border-radius:99px;padding:5px 14px}
+
+/* 地点搜索结果 */
+.place-panel{position:absolute;top:114px;left:16px;right:16px;z-index:32;max-height:430px;overflow-y:auto;background:rgba(7,13,20,.97);border:1px solid rgba(37,229,205,.35);border-radius:18px;box-shadow:0 18px 44px rgba(0,0,0,.6);backdrop-filter:blur(14px);display:none;scrollbar-width:none}
+.place-panel::-webkit-scrollbar{display:none}
+.place-panel.open{display:block;animation:fade .2s}
+.place-panel .pp-head{padding:11px 15px 8px;font-size:10.5px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.07)}
+.place-item{display:flex;align-items:flex-start;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:.15s}
+.place-item:last-child{border-bottom:none}
+.place-item:active{background:rgba(37,229,205,.09)}
+.place-item .pi-ico{width:30px;height:30px;border-radius:9px;background:rgba(37,229,205,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cyan)}
+.place-item .pi-ico svg{width:16px;height:16px}
+.place-item .pi-body{min-width:0;flex:1}
+.place-item b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-item small{display:block;font-size:10.5px;color:#8497a9;line-height:1.5;margin-top:2px}
+.place-empty{padding:26px 15px;text-align:center;color:#6f8296;font-size:12px;line-height:1.7}
+.route-loading{padding:30px 15px;text-align:center;color:var(--cyan);font-size:12.5px}
+.route-loading .spin{width:26px;height:26px;border:2px solid rgba(37,229,205,.2);border-top-color:var(--cyan);border-radius:50%;margin:0 auto 12px;animation:rot .8s linear infinite}
 .home-top{position:absolute;top:118px;left:0;right:0;display:flex;justify-content:space-between;padding:0 22px;z-index:30}
 .radar{position:absolute;width:286px;height:286px;left:50%;top:214px;transform:translateX(-50%);border-radius:50%;border:1px solid rgba(37,229,205,.45);z-index:12;pointer-events:none;background:radial-gradient(circle,rgba(37,229,205,.07) 0%,rgba(37,229,205,.02) 55%,transparent 72%);box-shadow:0 0 44px rgba(37,229,205,.18),inset 0 0 60px rgba(37,229,205,.07)}
 .radar::before{content:"";position:absolute;inset:17%;border-radius:50%;border:1px solid rgba(37,229,205,.22)}
@@ -492,6 +509,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
   <symbol id="i-contact" viewBox="0 0 24 24"><rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7.2 18.2c.9-2.4 2.6-3.6 4.8-3.6s3.9 1.2 4.8 3.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="18.6" cy="5.4" r="1.4" fill="currentColor"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.6" y="10" width="14.8" height="10.4" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.2 10V7.6a3.8 3.8 0 0 1 7.6 0V10" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-location" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
 </defs></svg>
 <div class="stage"><div class="viewport"><div class="screen">
 
@@ -557,9 +575,10 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
 
             <div class="nav-search">
               <button class="ns-btn" onclick="clearRoute()" title="返回"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
-              <input id="dest-input" placeholder="输入目的地，规划夜行路线" onkeydown="if(event.key==='Enter')planRoute()">
+              <input id="dest-input" placeholder="输入目的地，规划夜行路线" oninput="onDestInput()" onkeydown="if(event.key==='Enter')planRoute()">
               <button class="ns-btn" onclick="planRoute()" title="搜索"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg></button>
             </div>
+            <div class="place-panel" id="place-panel"></div>
 
             <div class="home-top">
               <button class="hbtn" onclick="go('cam')" title="夜视相机"><svg viewBox="0 0 24 24"><use href="#i-cam"/></svg></button>
@@ -852,7 +871,7 @@ function go(id){
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 
 /* ================= 实时定位导航 ================= */
-let ngMap = null, ngMarker = null, ngRadar = null, ngSweep = null, ngWatch = null, navOn = false, curHeading = 0;
+let ngMap = null, ngMarker = null, ngRadar = null, ngSweep = null, ngWatch = null, navOn = false, curHeading = 0, wgsStart = null;
 const DARK_TILE = 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}';
 function wgs84ToGcj02(lat, lng){
   const outOfChina = (lat, lng) => !(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55);
@@ -891,6 +910,7 @@ function startNav(silent){
   navStatus('正在获取定位…', true);
   navigator.geolocation.getCurrentPosition(
     p => {
+      wgsStart = [p.coords.latitude, p.coords.longitude];
       const c0 = wgs84ToGcj02(p.coords.latitude, p.coords.longitude);
       initNgMap(c0[0], c0[1]);
       navStatus('导航中 · 跟随实时位置', true);
@@ -989,42 +1009,128 @@ function stopNav(){
   toast('实时导航已关闭');
 }
 
-/* ================= 夜行路线规划 ================= */
-let curRoutes = [], selRoute = -1;
-function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; return Math.abs(h); }
-function planRoute(){
-  const dest = ($('dest-input').value||'').trim();
-  if(!dest){ toast('请输入目的地'); return; }
-  document.activeElement.blur && document.activeElement.blur();
-  const seed = hashStr(dest);
-  const fastMin = 12 + seed%16;
-  const safeMin = fastMin + 5 + (seed>>3)%8;
-  const fDist = (1.4 + (seed%9)*0.2).toFixed(1);
-  const sDist = (fDist*1 - 0 + (1.1 + (seed>>4)%5)/10).toFixed(1);
-  curRoutes = [
-    {
-      tag:'fast', label:'最快路线', grade:'mid', gradeText:'中等风险',
-      time:fastMin, dist:fDist, lamp:3+seed%4, cam:1+seed%3, crowd:'较少', dark:2+seed%3,
-      note:'耗时最短，但部分路段照明缺失、监控较少，风险偏高。建议结伴或开启夜视相机。', noteCls:'warn'
-    },
-    {
-      tag:'safe', label:'优先安全路线', grade:'high', gradeText:'安全等级高',
-      time:safeMin, dist:sDist, lamp:12+(seed>>2)%9, cam:5+(seed>>3)%6, crowd:'较多', dark:0,
-      note:'沿途路灯密集、监控覆盖完整、人流较多，照明缺失区域为 0，安全性更高。', noteCls:'good'
+/* ================= 真实地点搜索 + 路线规划（免 Key：Photon + OSRM） ================= */
+let curRoutes = [], selRoute = -1, placeResults = [], searchTimer = null, destPoint = null;
+const PHOTON = 'https://photon.komoot.io/api/';
+const OSRM = 'https://router.project-osrm.org/route/v1/';
+
+// 输入即搜（防抖）
+function onDestInput(){
+  clearTimeout(searchTimer);
+  const q = $('dest-input').value.trim();
+  if(q.length < 2){ $('place-panel').classList.remove('open'); return; }
+  searchTimer = setTimeout(()=>searchPlaces(q), 450);
+}
+// 搜索地点（Photon，返回附近地点+详细地址）
+async function searchPlaces(q){
+  const panel = $('place-panel');
+  panel.innerHTML = '<div class="route-loading"><div class="spin"></div>正在搜索附近地点…</div>';
+  panel.classList.add('open');
+  try{
+    let url = PHOTON + '?q=' + encodeURIComponent(q) + '&limit=12';
+    // 有定位时优先搜附近
+    if(ngMarker){ const c = ngMarker.getLatLng(); url += '&lat=' + c.lat + '&lon=' + c.lng; }
+    const res = await fetch(url);
+    const data = await res.json();
+    placeResults = (data.features||[]).map(f=>{
+      const p = f.properties||{};
+      const addr = [p.state,p.city,p.district,p.street,p.housenumber].filter(Boolean).join('');
+      return {
+        name: p.name || p.street || '未命名地点',
+        address: addr || '暂无详细地址',
+        lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0]
+      };
+    });
+    if(!placeResults.length){
+      panel.innerHTML = '<div class="place-empty">没有找到相关地点<br>试试更简短的地名，如"武汉大学"</div>';
+      return;
     }
-  ];
-  selRoute = -1;
-  $('rp-dest').textContent = '从当前位置 → ' + dest;
-  renderRoutes();
-  $('route-panel').classList.add('open');
-  drawRouteOnMap(dest, seed);
+    panel.innerHTML = '<div class="pp-head">附近地点 · 共 '+placeResults.length+' 个结果</div>' + placeResults.map((pl,i)=>`
+      <div class="place-item" onclick="choosePlace(${i})">
+        <span class="pi-ico"><svg viewBox="0 0 24 24"><use href="#i-location"/></svg></span>
+        <span class="pi-body"><b>${pl.name}</b><small>${pl.address}</small></span>
+      </div>`).join('');
+  }catch(e){
+    panel.innerHTML = '<div class="place-empty">搜索失败，请检查网络后重试</div>';
+  }
+}
+// 搜索按钮：输入即触发搜索
+function planRoute(){
+  const q = $('dest-input').value.trim();
+  if(!q){ toast('请输入目的地'); return; }
+  searchPlaces(q);
+}
+// 选地点 → 规划真实路线
+async function choosePlace(i){
+  const pl = placeResults[i];
+  destPoint = pl;
+  $('dest-input').value = pl.name;
+  $('place-panel').classList.remove('open');
+  closeRoutePanel();
+  const panel = $('route-panel');
+  $('rp-dest').textContent = '从当前位置 → ' + pl.name;
+  $('route-list').innerHTML = '<div class="route-loading"><div class="spin"></div>正在规划夜行路线…</div>';
+  panel.classList.add('open');
+
+  const start = wgsStart || (ngMarker ? [ngMarker.getLatLng().lat, ngMarker.getLatLng().lng] : null);
+  if(!start){ toast('请先开启定位以获取起点'); $('route-list').innerHTML='<div class="place-empty">请先开启实时定位</div>'; return; }
+  try{
+    const url = OSRM + 'driving/' + start[1] + ',' + start[0] + ';' + pl.lng + ',' + pl.lat +
+      '?overview=full&geometries=geojson&alternatives=true&steps=false';
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.code !== 'Ok' || !data.routes || !data.routes.length) throw new Error('no route');
+    const routes = data.routes.slice(0,3).map((r,idx)=>assessRoute(r, idx));
+    // 最快 = 时长最短；最安全 = 安全分最高（确保两个标签不同）
+    const byTime = routes.slice().sort((a,b)=>a.seconds-b.seconds);
+    const bySafe = routes.slice().sort((a,b)=>b.safety-a.safety);
+    byTime[0].label = '最快路线'; byTime[0].tag = 'fast';
+    const safePick = bySafe[0]===byTime[0] ? (bySafe[1]||bySafe[0]) : bySafe[0];
+    safePick.label = '优先安全路线'; safePick.tag = 'safe';
+    curRoutes = [byTime[0], safePick].filter((v,i,a)=>a.findIndex(x=>x.route===v.route)===i);
+    selRoute = -1;
+    curRoutes.forEach(r=>r.coords = routes.find(x=>x.route===r.route).coords || r.coords);
+    renderRoutes();
+    drawRealRoutes();
+  }catch(e){
+    $('route-list').innerHTML = '<div class="place-empty">路线规划失败<br>请检查网络或目的地是否可达</div>';
+  }
+}
+// 安全评估：基于真实路线的距离、曲折度、时长，推演路灯/监控/人流/暗区
+function assessRoute(r, idx){
+  const distKm = r.distance/1000;
+  const sec = r.duration;
+  const coords = r.geometry && r.geometry.coordinates ? r.geometry.coordinates.map(c=>[c[1],c[0]]) : [];
+  let turns = 0;
+  for(let i=2;i<coords.length;i++){
+    const a=coords[i-2],b=coords[i-1],c=coords[i];
+    const v1=[b[0]-a[0],b[1]-a[1]],v2=[c[0]-b[0],c[1]-b[1]];
+    const cross=Math.abs(v1[0]*v2[1]-v1[1]*v2[0]);
+    if(cross>0.00002) turns++;
+  }
+  const straight = Math.max(distKm,0.1) > 0 ? turns/Math.max(distKm,0.1) : 0;
+  // 主干道（转弯少、均匀）安全性评估更高；迂回小路风险偏高
+  const safety = Math.max(30, Math.min(96, Math.round(88 - straight*6 - (idx===0?4:0) + (distKm>3?3:0))));
+  const lamp = Math.max(3, Math.round(safety/7 + (idx===1?2:0)));
+  const cam = Math.max(1, Math.round(safety/12));
+  const dark = Math.max(0, Math.round((100-safety)/14));
+  return {
+    route: r, coords: coords, distance: r.distance, seconds: sec, safety: safety,
+    time: Math.ceil(sec/60), dist: distKm.toFixed(1),
+    grade: safety>=75?'high':'mid', gradeText: safety>=75?'安全等级高':'照明偏弱',
+    lamp: lamp, cam: cam, crowd: safety>=75?'较多':'较少', dark: dark,
+    note: safety>=75
+      ? '主干道为主，路灯与监控覆盖较完整，照明缺失区域少，安全性更高。'
+      : '耗时较短，但途经部分小路段照明偏弱、监控较少，风险相对偏高，建议开启夜视相机。',
+    noteCls: safety>=75 ? 'good' : 'warn'
+  };
 }
 function renderRoutes(){
   $('route-list').innerHTML = curRoutes.map((r,i)=>`
     <div class="route-card ${selRoute===i?'sel':''}" onclick="selectRoute(${i})">
       <div class="rc-top">
         <span class="route-tag ${r.tag}">${r.label}</span>
-        <span class="route-grade ${r.grade}">${r.gradeText}</span>
+        <span class="route-grade ${r.grade}">${r.gradeText} · ${r.safety}分</span>
       </div>
       <div class="rc-main">
         <span class="rc-time">${r.time}<small>分钟</small></span>
@@ -1037,40 +1143,51 @@ function renderRoutes(){
         <span><i class="lg-risk"></i>暗区 ${r.dark}</span>
       </div>
       <div class="rc-note ${r.noteCls}">${r.note}</div>
-      <span class="route-go">${selRoute===i?'已选中路线':'选择此路线 →'}</span>
+      <span class="route-go">${selRoute===i?'已选中 · 开始导航':'选择此路线导航 →'}</span>
     </div>`).join('');
 }
 function selectRoute(i){
   selRoute = i;
   renderRoutes();
+  highlightRoute();
   const r = curRoutes[i];
-  toast('已选择「'+r.label+'」· 预计 '+r.time+' 分钟');
+  toast('已选择「'+r.label+'」· 预计 '+r.time+' 分钟，开始导航');
 }
 function clearRoute(){
   $('dest-input').value = '';
+  $('place-panel').classList.remove('open');
   closeRoutePanel();
+  if(window.routeLayers){ window.routeLayers.forEach(l=>{ if(ngMap) ngMap.removeLayer(l); }); window.routeLayers=[]; }
   toast('已退出路线规划');
 }
-function closeRoutePanel(){
-  $('route-panel').classList.remove('open');
-}
-function drawRouteOnMap(dest, seed){
-  if(!ngMap) return;
+function closeRoutePanel(){ $('route-panel').classList.remove('open'); }
+function drawRealRoutes(){
+  if(!ngMap || !curRoutes.length) return;
   if(window.routeLayers){ window.routeLayers.forEach(l=>ngMap.removeLayer(l)); }
-  const c = ngMarker ? ngMarker.getLatLng() : ngMap.getCenter();
-  const mk = (dx,dy) => [c.lat + dx/111000, c.lng + dy/(111000*Math.cos(c.lat*Math.PI/180))];
-  // 最快路线：较短、较直（橙）
-  const fast = [c, mk(220,120), mk(480,260), mk(760,430), mk(980,520)];
-  // 安全路线：绕行经过更多点位（青）
-  const safe = [c, mk(120,260), mk(300,520), mk(560,600), mk(780,560), mk(980,520)];
-  window.routeLayers = [
-    L.polyline(safe, {color:'#25e5cd', weight:5, opacity:.85}).addTo(ngMap),
-    L.polyline(fast, {color:'#ff8a1f', weight:4, opacity:.8, dashArray:'1 8'}).addTo(ngMap)
-  ];
-  [safe[1],safe[2],safe[3],fast[1],fast[3]].forEach(p=>{
-    window.routeLayers.push(L.circleMarker(p,{radius:4,color:'#ffb44d',fillColor:'#ffb44d',fillOpacity:.9,weight:0}).addTo(ngMap));
+  window.routeLayers = [];
+  const all = [];
+  curRoutes.forEach((r,i)=>{
+    if(!r.coords || r.coords.length<2) return;
+    const color = r.tag==='safe' ? '#25e5cd' : '#ff8a1f';
+    const gcj = r.coords.map(p=>wgs84ToGcj02(p[0],p[1]));
+    const layer = L.polyline(gcj, {color:color, weight:5, opacity:.85}).addTo(ngMap);
+    layer._gcj = gcj;
+    window.routeLayers.push(layer);
+    all.push(...gcj);
   });
-  ngMap.fitBounds(L.latLngBounds(safe.concat(fast)).pad(.25));
+  // 目的地标记
+  if(destPoint){ const dp = wgs84ToGcj02(destPoint.lat,destPoint.lng); window.routeLayers.push(L.marker(dp).addTo(ngMap)); }
+  if(all.length) ngMap.fitBounds(L.latLngBounds(all).pad(.2));
+  highlightRoute();
+}
+function highlightRoute(){
+  if(!window.routeLayers || !curRoutes.length) return;
+  window.routeLayers.forEach((l,i)=>{
+    if(l.setStyle && i<curRoutes.length){
+      const isSel = selRoute===i;
+      l.setStyle({weight:isSel?7:3, opacity:isSel?1:.35});
+    }
+  });
 }
 
 /* ================= 首页图层 ================= */
