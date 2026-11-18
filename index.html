@@ -519,7 +519,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
               <button class="hbtn" onclick="toast('守护设置：SOS 倒计时 3 秒 · 夜间模式已开启')" title="设置"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
             </div>
 
-            <div class="guard-status"><button class="gs-pill" onclick="startNav()" id="nav-btn" title="点击开启实时定位导航"><i></i><span id="nav-status">点击开启实时导航 · 跟随位置与朝向</span></button></div>
+            <div class="guard-status"><button class="gs-pill" onclick="startNav(false)" id="nav-btn" title="实时定位导航"><i></i><span id="nav-status">正在启动实时导航…</span></button></div>
 
             <div class="radar" id="decor-radar">
               <div class="cross"><i></i><i></i></div>
@@ -823,10 +823,10 @@ function navStatus(txt, on){
   $('nav-status').textContent = txt;
   $('nav-btn').classList.toggle('active', !!on);
 }
-function startNav(){
-  if(navOn){ stopNav(); return; }
-  if(typeof L === 'undefined'){ toast('地图库未加载，请检查网络后重试'); return; }
-  if(!navigator.geolocation){ toast('当前设备不支持定位'); return; }
+function startNav(silent){
+  if(navOn){ if(!silent) stopNav(); return; }
+  if(typeof L === 'undefined'){ if(!silent) toast('地图库未加载，请检查网络后重试'); return; }
+  if(!navigator.geolocation){ if(!silent) toast('当前设备不支持定位'); return; }
   navStatus('正在获取定位…', true);
   navigator.geolocation.getCurrentPosition(
     p => {
@@ -843,7 +843,7 @@ function startNav(){
     err => {
       navOn = false;
       navStatus('定位失败 · 点击重试', false);
-      toast(err.code===1 ? '定位权限被拒绝，请在浏览器设置中允许' : '定位失败，请到户外或检查网络');
+      if(!silent) toast(err.code===1 ? '定位权限被拒绝，请在浏览器设置中允许' : '定位失败，请到户外或检查网络');
     },
     {enableHighAccuracy:true, timeout:15000}
   );
@@ -907,9 +907,11 @@ function onOrient(e){
 }
 function enableCompass(){
   const DOE = window.DeviceOrientationEvent;
-  if(DOE && typeof DOE.requestPermission === 'function'){
-    DOE.requestPermission().then(r => { if(r==='granted') window.addEventListener('deviceorientation', onOrient); }).catch(()=>{});
-  } else if(DOE){
+  if(!DOE) return;
+  if(typeof DOE.requestPermission === 'function'){
+    // iOS 权限由首次触摸的自动逻辑处理，这里仅尝试添加监听（已授权则生效）
+    window.addEventListener('deviceorientation', onOrient);
+  } else {
     window.addEventListener('deviceorientation', onOrient);
   }
 }
@@ -1599,6 +1601,25 @@ paintMusic();
 renderAccount();
 initCropDrag();
 syncNav('home');
+
+// 打开即自动开启实时导航（静默请求定位）
+window.addEventListener('load', () => setTimeout(() => startNav(true), 400));
+// iOS 方向权限需用户手势：首次触摸屏幕时自动请求，之后箭头随转向
+(function autoCompass(){
+  const DOE = window.DeviceOrientationEvent;
+  if(!DOE) return;
+  if(typeof DOE.requestPermission !== 'function'){
+    window.addEventListener('deviceorientation', onOrient);
+    return;
+  }
+  const ask = () => {
+    DOE.requestPermission().then(r => { if(r==='granted') window.addEventListener('deviceorientation', onOrient); }).catch(()=>{});
+    document.removeEventListener('touchstart', ask);
+    document.removeEventListener('click', ask);
+  };
+  document.addEventListener('touchstart', ask, {once:false, passive:true});
+  document.addEventListener('click', ask);
+})();
 
 (function(){
   function fit(){
