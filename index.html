@@ -268,8 +268,39 @@ button{font-family:inherit}
 .acct-ghost{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#9fb1c2;font-size:13px;cursor:pointer;margin-top:10px}
 .acct-tip{font-size:10.5px;color:#6f8296;line-height:1.75;margin-top:12px;text-align:center}
 .me-card::before{content:"";position:absolute;right:-30px;top:-50px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(37,229,205,.16),transparent 70%)}
-.me-avatar{width:72px;height:72px;border-radius:50%;flex-shrink:0;position:relative;background:radial-gradient(circle at 32% 28%,#2a3a52,#0d1520 72%);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 20px rgba(37,229,205,.15),0 0 20px rgba(37,229,205,.12)}
+.me-avatar{width:72px;height:72px;border-radius:50%;flex-shrink:0;position:relative;background:radial-gradient(circle at 32% 28%,#2a3a52,#0d1520 72%);border:1px solid rgba(37,229,205,.3);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 20px rgba(37,229,205,.15),0 0 20px rgba(37,229,205,.12);cursor:pointer;overflow:hidden;transition:.2s}
+.me-avatar:active{transform:scale(.94)}
 .me-avatar svg{width:38px;height:38px;color:var(--cyan);filter:drop-shadow(0 0 8px rgba(37,229,205,.7))}
+.me-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.me-avatar.has-img svg{display:none}
+.me-avatar.has-img img{display:block}
+.me-avatar .avatar-hint{position:absolute;bottom:0;left:0;right:0;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(3,10,16,.72);color:var(--cyan);font-size:9px;opacity:0;transition:.2s}
+.me-avatar:hover .avatar-hint{opacity:1}
+
+/* 头像裁剪 */
+.crop-overlay{position:absolute;inset:0;z-index:88;background:#04080c;display:none;flex-direction:column}
+.crop-overlay.open{display:flex;animation:fade .2s}
+.crop-head{height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:var(--txt);font-size:14px;font-weight:600}
+.crop-head button{background:none;border:none;color:var(--cyan);font-size:13px;cursor:pointer;padding:8px 4px;font-family:inherit}
+.crop-head .cancel{color:#9fb1c2}
+.crop-stage{flex:1;position:relative;overflow:hidden;touch-action:none;cursor:grab}
+.crop-stage:active{cursor:grabbing}
+.crop-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.crop-circle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:270px;height:270px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 9999px rgba(4,8,12,.72),inset 0 0 0 1.5px var(--cyan),0 0 22px rgba(37,229,205,.35)}
+.crop-circle::before,.crop-circle::after{content:"";position:absolute;background:rgba(37,229,205,.55)}
+.crop-circle::before{left:50%;top:44%;width:1px;height:12%;transform:translateX(-50%)}
+.crop-circle::after{top:50%;left:44%;height:1px;width:12%;transform:translateY(-50%)}
+.crop-tools{flex-shrink:0;padding:16px 24px 26px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(8,14,20,.6),#070c12)}
+.crop-tools .ct-row{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--muted)}
+.crop-tools .ct-row svg{width:16px;height:16px;color:var(--cyan);flex-shrink:0}
+.crop-tools input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;background:rgba(255,255,255,.16);outline:none}
+.crop-tools input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 10px rgba(37,229,205,.6)}
+.crop-tools .ct-tip{text-align:center;font-size:10.5px;color:#6f8296}
+.avatar-menu-btn{display:flex;align-items:center;gap:12px;width:100%;padding:14px 4px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.06);color:var(--txt);font-size:13.5px;cursor:pointer;text-align:left;font-family:inherit}
+.avatar-menu-btn:last-child{border-bottom:none}
+.avatar-menu-btn .am-ico{width:38px;height:38px;border-radius:11px;background:rgba(37,229,205,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.avatar-menu-btn .am-ico svg{width:19px;height:19px;color:var(--cyan)}
+.avatar-menu-btn small{display:block;color:#7d90a3;font-size:10.5px;margin-top:2px}
 .me-info{flex:1;min-width:0}
 .me-info b{font-size:17.5px;letter-spacing:.5px}
 .me-info span{display:block;color:#8ba0b2;font-size:11.5px;margin-top:2px}
@@ -600,7 +631,11 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
             </div>
             <div class="me-scroll">
               <div class="me-card" onclick="openAccount()" title="点击登录或修改资料">
-                <div class="me-avatar"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
+                <div class="me-avatar" id="avatar-box" onclick="event.stopPropagation();openAvatarMenu()" title="点击更换头像">
+                  <svg viewBox="0 0 24 24"><use href="#i-moon"/></svg>
+                  <img id="avatar-img" alt="头像">
+                  <span class="avatar-hint">更换头像</span>
+                </div>
                 <div class="me-info">
                   <b id="acct-nickname">安安同学</b>
                   <span id="acct-account">账号：ye_an_2026</span>
@@ -671,6 +706,25 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
             <div class="sh-head"><h4 id="sheet-title">播放列表</h4><button class="plain" onclick="closeSheet()"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-close"/></svg></button></div>
             <div class="sh-body" id="sheet-body"></div>
           </div>
+
+          <!-- 头像裁剪 -->
+          <div class="crop-overlay" id="crop-overlay">
+            <div class="crop-head">
+              <button class="cancel" onclick="closeCrop()">取消</button>
+              <span>调整头像</span>
+              <button onclick="applyCrop()">完成</button>
+            </div>
+            <div class="crop-stage" id="crop-stage">
+              <canvas id="crop-canvas"></canvas>
+              <div class="crop-circle"></div>
+            </div>
+            <div class="crop-tools">
+              <div class="ct-row"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>缩放<input type="range" id="crop-scale" min="100" max="300" value="100"></div>
+              <div class="ct-tip">拖动图片调整位置 · 滑动缩放 · 圆形框内即为最终头像</div>
+            </div>
+          </div>
+          <input type="file" id="file-camera" accept="image/*" capture="environment" style="display:none" onchange="onAvatarFile(event)">
+          <input type="file" id="file-album" accept="image/*" style="display:none" onchange="onAvatarFile(event)">
 
           <!-- SOS -->
           <div class="sos-overlay" id="sos-overlay">
@@ -1115,11 +1169,108 @@ const products = [
 const cats = ['全部','照明','警报','反光','定位','居家'];
 let activeCat = '全部', cart = [];
 
+/* ================= 头像更换与圆形裁剪 ================= */
+let cropImg = null, cropScale = 1, cropX = 0, cropY = 0, cropDrag = null;
+const cropCanvas = $('crop-canvas'), cropCtx = cropCanvas.getContext('2d');
+function openAvatarMenu(){ closeSheet(); setTimeout(()=>openSheet('avatar'), 220); }
+function pickAvatar(src){
+  closeSheet();
+  const input = src==='camera' ? $('file-camera') : $('file-album');
+  input.value = '';
+  input.click();
+}
+function onAvatarFile(e){
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ toast('请选择图片文件'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { startCrop(img); };
+    img.onerror = () => toast('图片读取失败，请重试');
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+}
+function startCrop(img){
+  cropImg = img;
+  const stage = $('crop-stage');
+  const w = stage.clientWidth || 380, h = stage.clientHeight || 620;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cropCanvas.width = w*dpr; cropCanvas.height = h*dpr;
+  cropCtx.setTransform(dpr,0,0,dpr,0,0);
+  const base = Math.max(270/img.width, 270/img.height);
+  cropScale = base; cropX = 0; cropY = 0;
+  const slider = $('crop-scale');
+  slider.min = Math.round(base*100); slider.max = Math.round(base*100*3); slider.value = Math.round(base*100);
+  $('crop-overlay').classList.add('open');
+  requestAnimationFrame(drawCrop);
+}
+function drawCrop(){
+  if(!cropImg) return;
+  const W = $('crop-stage').clientWidth||380, H = $('crop-stage').clientHeight||620;
+  cropCtx.clearRect(0,0,W,H);
+  cropCtx.fillStyle = '#04080c'; cropCtx.fillRect(0,0,W,H);
+  const dw = cropImg.width*cropScale, dh = cropImg.height*cropScale;
+  cropCtx.drawImage(cropImg, W/2 - dw/2 + cropX, H/2 - dh/2 + cropY, dw, dh);
+}
+function onCropMove(e){
+  if(!cropDrag) return;
+  const p = e.touches ? e.touches[0] : e;
+  cropX = p.clientX - cropDrag.x0 + cropDrag.cx0;
+  cropY = p.clientY - cropDrag.y0 + cropDrag.cy0;
+  drawCrop();
+  e.preventDefault();
+}
+function initCropDrag(){
+  const stage = $('crop-stage');
+  stage.addEventListener('pointerdown', e=>{
+    cropDrag = {x0:e.clientX, y0:e.clientY, cx0:cropX, cy0:cropY};
+    stage.setPointerCapture && stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', onCropMove);
+  stage.addEventListener('pointerup', ()=>cropDrag=null);
+  stage.addEventListener('pointercancel', ()=>cropDrag=null);
+  $('crop-scale').addEventListener('input', e=>{
+    cropScale = parseInt(e.target.value,10)/100;
+    drawCrop();
+  });
+}
+function closeCrop(){
+  $('crop-overlay').classList.remove('open');
+  cropImg = null;
+}
+function applyCrop(){
+  if(!cropImg){ toast('请先选择图片'); return; }
+  const S = 300, out = document.createElement('canvas');
+  out.width = S; out.height = S;
+  const ctx = out.getContext('2d');
+  const stageW = $('crop-stage').clientWidth||380, stageH = $('crop-stage').clientHeight||620;
+  const dw = cropImg.width*cropScale, dh = cropImg.height*cropScale;
+  const dx = stageW/2 - dw/2 + cropX, dy = stageH/2 - dh/2 + cropY;
+  const ratio = S/270;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(S/2,S/2,S/2,0,Math.PI*2); ctx.clip();
+  ctx.drawImage(cropImg, (dx - (stageW-270)/2)*ratio, (dy - (stageH-270)/2)*ratio, dw*ratio, dh*ratio);
+  ctx.restore();
+  const data = out.toDataURL('image/png');
+  $('avatar-img').src = data;
+  $('avatar-box').classList.add('has-img');
+  account.avatar = data;
+  try { localStorage.setItem('ng_avatar', data); } catch(e){}
+  closeCrop();
+  toast('头像已更新');
+}
+
 /* ================= 账户 ================= */
-let account = { loggedIn:false, phone:'', nickname:'夜安用户', code:'' };
+let account = { loggedIn:false, phone:'', nickname:'夜安用户', code:'', avatar:'' };
 function renderAccount(){
   $('acct-nickname').textContent = account.loggedIn ? account.nickname : '未登录 · 点击登录';
   $('acct-account').textContent = account.loggedIn ? '手机号：'+account.phone.replace(/(\d{3})\d{4}(\d{4})/,'$1****$2') : '登录后同步夜行数据';
+  try {
+    const saved = localStorage.getItem('ng_avatar');
+    if(saved){ $('avatar-img').src = saved; $('avatar-box').classList.add('has-img'); account.avatar = saved; }
+  } catch(e){}
 }
 function openAccount(){ openSheet('account'); }
 function sendCode(){
@@ -1214,6 +1365,17 @@ function openSheet(type, idx){
       </div>
       <p style="color:#8ba0b2;font-size:12.5px;line-height:1.8;margin-bottom:16px">${p.desc}。夜行场景专用设计，轻量便携、单手可操作，出发前放进包里即可获得一份额外守护。</p>
       <button class="add-line" style="border-style:solid;border-color:#25e5cd;color:#032a26;background:linear-gradient(135deg,#4df3dc,#00bfa8);font-weight:700" onclick="addCart(${idx});closeSheet()">加入购物车</button>`;
+  } else if(type==='avatar'){
+    title = '更换头像';
+    html = `<button class="avatar-menu-btn" onclick="pickAvatar('camera')">
+        <span class="am-ico"><svg viewBox="0 0 24 24"><use href="#i-cam"/></svg></span>
+        <span><b>拍照</b><small>调用手机相机拍摄照片</small></span>
+      </button>
+      <button class="avatar-menu-btn" onclick="pickAvatar('album')">
+        <span class="am-ico"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></span>
+        <span><b>从相册选择</b><small>从手机相册中挑选图片</small></span>
+      </button>
+      <div class="acct-tip">选择后可在圆形框中拖动、缩放，确认后套用为头像</div>`;
   } else if(type==='account'){
     if(account.loggedIn){
       title = '修改昵称';
@@ -1294,6 +1456,7 @@ renderChips();
 renderShop();
 paintMusic();
 renderAccount();
+initCropDrag();
 syncNav('home');
 
 (function(){
