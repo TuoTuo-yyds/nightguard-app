@@ -104,6 +104,8 @@ button{font-family:inherit}
 #realmap .leaflet-container{background:#060e16}
 #realmap .ng-me-wrap{background:transparent;border:none}
 #realmap .ng-me-arrow{width:40px;height:40px;transform-origin:50% 50%;filter:drop-shadow(0 0 8px rgba(37,229,205,.9))}
+#realmap .ng-radar-sweep{position:absolute;pointer-events:none;border-radius:50%;background:conic-gradient(from 0deg,rgba(37,229,205,.42),rgba(37,229,205,.08) 50deg,transparent 95deg);animation:ngsweep 3.2s linear infinite;-webkit-mask:radial-gradient(circle,transparent 6%,#000 7%);mask:radial-gradient(circle,transparent 6%,#000 7%)}
+@keyframes ngsweep{to{transform:rotate(360deg)}}
 .map-veil{position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at 50% 40%,transparent 26%,rgba(3,7,12,.55) 100%),linear-gradient(180deg,rgba(3,7,12,.92) 0%,transparent 20%,transparent 60%,rgba(3,7,12,.96) 100%)}
 .map-glow{filter:drop-shadow(0 0 6px rgba(37,229,205,.8))}
 .lamp-glow{filter:drop-shadow(0 0 7px rgba(255,178,80,.9))}
@@ -519,18 +521,14 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
 
             <div class="guard-status"><button class="gs-pill" onclick="startNav()" id="nav-btn" title="点击开启实时定位导航"><i></i><span id="nav-status">点击开启实时导航 · 跟随位置与朝向</span></button></div>
 
-            <div class="radar">
+            <div class="radar" id="decor-radar">
               <div class="cross"><i></i><i></i></div>
               <div class="sweep"></div>
               <div class="pulse"></div>
-              <svg class="nav-arrow" viewBox="0 0 80 80">
-                <path d="M40 6 L62 66 L40 54 L18 66 Z" fill="#25e5cd" stroke="#d6fff9" stroke-width="2.2" stroke-linejoin="round"/>
-                <path d="M40 6 L40 54" stroke="#eafffb" stroke-width="1.2" opacity=".7"/>
-              </svg>
               <span class="blip b1"></span><span class="blip b2"></span><span class="blip b3"></span>
             </div>
 
-            <div class="map-legend">
+            <div class="map-legend" id="map-legend">
               <strong>图例</strong>
               <span><i class="lg-lamp"></i>路灯</span>
               <span><i class="lg-cam"></i>监控</span>
@@ -793,7 +791,7 @@ function go(id){
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 
 /* ================= 实时定位导航 ================= */
-let ngMap = null, ngMarker = null, ngWatch = null, navOn = false, curHeading = 0;
+let ngMap = null, ngMarker = null, ngRadar = null, ngSweep = null, ngWatch = null, navOn = false, curHeading = 0;
 const DARK_TILE = 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}';
 function wgs84ToGcj02(lat, lng){
   const outOfChina = (lat, lng) => !(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55);
@@ -860,17 +858,40 @@ function initNgMap(lat, lng){
       html:'<div class="ng-me-arrow" id="ng-arrow"><svg viewBox="0 0 40 40"><path d="M20 2 L33 34 L20 27 L7 34 Z" fill="#25e5cd" stroke="#eafffb" stroke-width="2.2" stroke-linejoin="round"/></svg></div>'
     });
     ngMarker = L.marker([lat,lng], {icon:icon}).addTo(ngMap);
+    // 50 米半径雷达圈（地理真实半径）
+    ngRadar = L.circle([lat,lng], {
+      radius:50, color:'#25e5cd', weight:1.2, opacity:.55,
+      fillColor:'#25e5cd', fillOpacity:.07, interactive:false
+    }).addTo(ngMap);
+    // 扫描扇形（用 divIcon 按当前缩放计算像素半径，随位置移动）
+    updateSweep(lat, lng);
     $('realmap').classList.add('ready');
+    $('decor-radar').style.display = 'none';
+    $('map-legend').style.display = 'none';
   } else {
     ngMap.setView([lat,lng], 18);
     ngMarker.setLatLng([lat,lng]);
+    ngRadar.setLatLng([lat,lng]);
+    updateSweep(lat, lng);
   }
-  L.circleMarker([lat,lng], {radius:9, color:'#25e5cd', weight:1, opacity:.5, fillColor:'#25e5cd', fillOpacity:.12}).addTo(ngMap).bindPopup('当前位置');
+}
+function updateSweep(lat, lng){
+  if(!ngMap) return;
+  const metersPerPx = 156543.03392 * Math.cos(lat*Math.PI/180) / Math.pow(2, ngMap.getZoom());
+  const d = Math.round(100 / metersPerPx);
+  const sweepIcon = L.divIcon({
+    className:'ng-me-wrap', iconSize:[d,d], iconAnchor:[d/2,d/2],
+    html:'<div class="ng-radar-sweep" style="width:'+d+'px;height:'+d+'px"></div>'
+  });
+  if(!ngSweep){ ngSweep = L.marker([lat,lng], {icon:sweepIcon, interactive:false}).addTo(ngMap); }
+  else { ngSweep.setLatLng([lat,lng]); ngSweep.setIcon(sweepIcon); }
 }
 function updateNgPos(lat, lng, acc){
   if(!ngMap) return;
   ngMap.setView([lat,lng], ngMap.getZoom(), {animate:true, duration:.6});
   ngMarker.setLatLng([lat,lng]);
+  ngRadar.setLatLng([lat,lng]);
+  updateSweep(lat, lng);
   navStatus('导航中 · 精度 ±'+Math.round(acc)+'m', true);
 }
 function onOrient(e){
@@ -896,7 +917,9 @@ function stopNav(){
   if(ngWatch){ navigator.geolocation.clearWatch(ngWatch); ngWatch = null; }
   window.removeEventListener('deviceorientation', onOrient);
   navOn = false;
-  const rm = $('realmap'); if(rm) rm.style.transform = '';
+  const rm = $('realmap'); if(rm){ rm.style.transform = ''; rm.classList.remove('ready'); }
+  const dr = $('decor-radar'); if(dr) dr.style.display = '';
+  const lg = $('map-legend'); if(lg) lg.style.display = '';
   navStatus('点击开启实时导航 · 跟随位置与朝向', false);
   toast('实时导航已关闭');
 }
