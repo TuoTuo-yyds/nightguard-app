@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=c220a476">
-<script src="leaflet.js?v=c220a476"></script>
+<link rel="stylesheet" href="leaflet.css?v=dcbaf7b4">
+<script src="leaflet.js?v=dcbaf7b4"></script>
 <style>
 
 :root{
@@ -197,7 +197,7 @@ button{font-family:inherit}
 .radar .pulse{position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(37,229,205,.5);animation:pulse 3s ease-out infinite}
 @keyframes pulse{0%{transform:scale(.75);opacity:.8}100%{transform:scale(1.12);opacity:0}}
 .guard-status{position:absolute;top:170px;left:0;right:0;z-index:30;display:flex;justify-content:center}
-.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:var(--txt);background:var(--pill-bg);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);cursor:pointer;font-family:inherit;transition:.2s}
+.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:var(--txt);background:var(--pill-bg);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);font-family:inherit;pointer-events:none;user-select:none}
 .guard-status .gs-pill.active{border-color:rgba(37,229,205,.75);background:rgba(9,32,29,.85);box-shadow:0 0 16px rgba(37,229,205,.25)}
 .guard-status .gs-pill i{width:7px;height:7px;border-radius:50%;background:#3ddc97;box-shadow:0 0 9px #3ddc97;animation:blink 1.6s infinite}
 .guard-status .gs-pill b{color:var(--cyan)}
@@ -633,7 +633,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
               <button class="hbtn" onclick="openSettings()" title="设置"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
             </div>
 
-            <div class="guard-status"><button class="gs-pill" onclick="startNav(false)" id="nav-btn" title="实时定位导航"><i></i><span id="nav-status">正在启动实时导航…</span></button></div>
+            <div class="guard-status"><div class="gs-pill" id="nav-btn"><i></i><span id="nav-status">正在获取实时位置…</span></div></div>
 
             <div class="radar" id="decor-radar">
               <div class="cross"><i></i><i></i></div>
@@ -814,7 +814,7 @@ function startNav(silent){
     },
     err => {
       navOn = false;
-      navStatus('定位失败 · 点击重试', false);
+      navStatus('地图浏览中 · 定位未开启', false);
       if(!silent) toast(err.code===1 ? '定位权限被拒绝，请在浏览器设置中允许' : '定位失败，请到户外或检查网络');
     },
     {enableHighAccuracy:true, timeout:15000}
@@ -894,11 +894,8 @@ function stopNav(){
   if(ngWatch){ navigator.geolocation.clearWatch(ngWatch); ngWatch = null; }
   window.removeEventListener('deviceorientation', onOrient);
   navOn = false;
-  const rm = $('realmap'); if(rm){ rm.style.transform = ''; rm.classList.remove('ready'); }
-  const dr = $('decor-radar'); if(dr) dr.style.display = '';
-  const lg = $('map-legend'); if(lg) lg.style.display = '';
-  navStatus('点击开启实时导航 · 跟随位置与朝向', false);
-  toast('实时导航已关闭');
+  const rm = $('realmap'); if(rm) rm.style.transform = '';
+  navStatus('地图浏览中 · 未开启实时跟随', false);
 }
 
 /* ================= 真实地点搜索 + 路线规划（免 Key：Photon + OSRM） ================= */
