@@ -7,8 +7,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=7975a5f0">
-<script src="leaflet.js?v=7975a5f0"></script>
+<link rel="icon" type="image/jpeg" href="app-logo.jpg?v=d37002a0">
+<link rel="apple-touch-icon" href="app-logo.jpg?v=d37002a0">
+<link rel="apple-touch-icon-precomposed" href="app-logo.jpg?v=d37002a0">
+<link rel="stylesheet" href="leaflet.css?v=d37002a0">
+<script src="leaflet.js?v=d37002a0"></script>
 <style>
 
 :root{
@@ -510,6 +513,27 @@ footer b{color:var(--muted);letter-spacing:3px}
 @media (max-width:900px){.phone-holder{transform:scale(.86);transform-origin:top center;margin-bottom:-120px}}
 @media (max-width:560px){.phone-holder{transform:scale(.74);margin-bottom:-230px}.guide{width:100%}.topbar .pill{display:none}}
 
+/* ============ 开屏加载界面 ============ */
+.splash{position:absolute;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:#05090f;transition:opacity .65s ease,visibility .65s}
+.splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+.splash-bg{position:absolute;inset:0;background:url('splash-bg.jpg') center center/cover no-repeat;transform:scale(1.08);animation:splashZoom 3.2s ease-out both}
+.splash-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,15,.25) 0%,transparent 30%,transparent 62%,rgba(5,9,15,.72) 100%)}
+.splash-core{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;margin-top:-40px}
+.splash-logo{width:112px;height:112px;border-radius:30px;overflow:hidden;box-shadow:0 0 60px rgba(37,229,205,.22),0 18px 46px rgba(0,0,0,.55);animation:splashFloat 2.6s ease-in-out infinite}
+.splash-logo img{width:100%;height:100%;display:block;object-fit:cover}
+.splash-name{margin-top:22px;font-size:25px;font-weight:700;letter-spacing:6px;color:#f4e6c6;text-shadow:0 0 24px rgba(255,200,120,.35);animation:splashUp .9s .25s both}
+.splash-name em{display:block;font-style:normal;font-size:11px;letter-spacing:7px;color:var(--cyan);margin-top:7px;font-weight:600;text-shadow:0 0 16px rgba(37,229,205,.5)}
+.splash-slogan{margin-top:16px;font-size:11px;letter-spacing:3px;color:rgba(233,243,248,.62);animation:splashUp .9s .45s both}
+.splash-bottom{position:absolute;left:0;right:0;bottom:70px;z-index:2;display:flex;flex-direction:column;align-items:center;animation:splashUp .9s .6s both}
+.splash-bar{width:172px;height:3px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
+.splash-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffbf6b,#25e5cd);box-shadow:0 0 12px rgba(37,229,205,.65);animation:splashLoad 1.9s cubic-bezier(.4,0,.2,1) forwards}
+.splash-tip{margin-top:13px;font-size:10.5px;letter-spacing:2px;color:rgba(233,243,248,.5);animation:splashBlink 1.5s ease-in-out infinite}
+@keyframes splashZoom{from{transform:scale(1.14)}to{transform:scale(1.02)}}
+@keyframes splashFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes splashUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes splashLoad{0%{width:0}100%{width:100%}}
+@keyframes splashBlink{0%,100%{opacity:.45}50%{opacity:.95}}
+
 html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
 *{touch-action:manipulation}
 .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
@@ -561,6 +585,20 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
 </defs></svg>
 <div class="stage"><div class="viewport"><div class="screen">
 
+          <!-- 开屏加载界面 -->
+          <div class="splash" id="splash">
+            <div class="splash-bg"></div>
+            <div class="splash-veil"></div>
+            <div class="splash-core">
+              <div class="splash-logo"><img src="app-logo.jpg" alt="夜安 NightGuard"></div>
+              <div class="splash-name">夜 安<em>NIGHTGUARD</em></div>
+              <div class="splash-slogan">夜间独行 · 安全守护</div>
+            </div>
+            <div class="splash-bottom">
+              <div class="splash-bar"><i></i></div>
+              <div class="splash-tip">正在开启夜间守护…</div>
+            </div>
+          </div>
           <div class="island"></div>
 
           <!-- 首页 -->
@@ -2073,6 +2111,12 @@ function openSub(key){
 }
 function closeSub(){ $('subpage').classList.remove('open'); }
 
+/* ================= 开屏加载 ================= */
+function dismissSplash(){
+  const s = $('splash');
+  if(s && !s.classList.contains('gone')) s.classList.add('gone');
+}
+
 /* ================= 初始化 ================= */
 loadSettings();
 setTheme(settings.theme);
@@ -2089,7 +2133,10 @@ window.addEventListener('load', () => {
   const def = wgs84ToGcj02(30.54, 114.32);
   initNgMap(def[0], def[1]);
   setTimeout(() => startNav(true), 400);
+  setTimeout(dismissSplash, 2200);
 });
+// 兜底：任何情况下 4 秒后必定关闭开屏
+setTimeout(dismissSplash, 4000);
 // iOS 方向权限需用户手势：首次触摸屏幕时自动请求，之后箭头随转向
 (function autoCompass(){
   const DOE = window.DeviceOrientationEvent;
