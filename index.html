@@ -728,7 +728,225 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
                 </div>
               </div>
               <div class="home-bar"></div>
-            
+            </div>
+          </div>
+
+          <!-- 夜视相机 -->
+          <div class="page" id="p-cam">
+            <canvas id="vf" width="201" height="437"></canvas>
+            <div class="vf-scan"></div>
+            <div class="vf-vignette"></div>
+            <div class="statusbar abs">
+              <span>22:47</span>
+              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
+            </div>
+            <div class="cam-top">
+              <button class="hbtn" onclick="go('home')" title="返回"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
+              <div class="seg">
+                <button id="seg-nv" class="on" onclick="setMode('nv')">夜视仪</button>
+                <button id="seg-ir" onclick="setMode('ir')">红外热量仪</button>
+              </div>
+            </div>
+            <div class="rec-chip" id="rec-chip"><i></i>REC <span id="rec-time">00:00</span></div>
+            <div class="cam-sheet">
+              <button class="cam-pill on" id="pill-photo" onclick="setCapture('photo')"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg>照片</button>
+              <button class="shutter" id="shutter" onclick="pressShutter()"><span></span></button>
+              <button class="cam-pill" id="pill-video" onclick="setCapture('video')"><svg viewBox="0 0 24 24"><use href="#i-video"/></svg>视频<i class="rdot"></i></button>
+            </div>
+            <div class="flash" id="flash"></div>
+          </div>
+
+          <!-- 音乐安抚 -->
+          <div class="page" id="p-music">
+            <div class="statusbar">
+              <span>22:47</span>
+              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
+            </div>
+            <div class="m-top">
+              <button class="plain" onclick="go('home')"><svg viewBox="0 0 24 24"><use href="#i-down"/></svg></button>
+              <div class="m-search">
+                <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
+                <input id="m-search" placeholder="搜索安抚音乐或白噪音" oninput="filterTracks()">
+              </div>
+              <button class="plain" onclick="openSheet('playlist')"><svg viewBox="0 0 24 24"><use href="#i-list"/></svg></button>
+            </div>
+
+            <div class="record-card">
+              <div class="tonearm" id="tonearm"><span class="pivot"></span><span class="head"></span></div>
+              <div class="vinyl" id="vinyl"><div class="art"><span>夜安</span></div></div>
+              <button class="timer-mini" onclick="toast('睡眠定时：30 分钟后自动停止')"><svg viewBox="0 0 24 24"><use href="#i-timer"/></svg></button>
+            </div>
+
+            <div class="m-meta">
+              <div class="m-title-row">
+                <div><h4 id="m-title">安抚白噪音</h4><p id="m-sub">夜间陪伴</p></div>
+                <span class="playing-tag" id="playing-tag">● 待播放</span>
+              </div>
+              <div class="bar" id="bar" onclick="seek(event)"><i id="bar-fill"></i><b id="bar-dot"></b></div>
+              <div class="times"><span id="t-cur">00:00</span><span id="t-dur">30:00</span></div>
+              <div class="m-ctrl">
+                <button class="cbtn" id="loop-btn2" onclick="toggleLoop()"><svg viewBox="0 0 24 24"><use href="#i-repeat"/></svg></button>
+                <button class="cbtn" onclick="prevTrack()"><svg viewBox="0 0 24 24"><use href="#i-prev"/></svg></button>
+                <button class="play-btn" id="play-btn" onclick="togglePlay()"><svg viewBox="0 0 24 24" id="play-icon"><use href="#i-play"/></svg></button>
+                <button class="cbtn" onclick="nextTrack()"><svg viewBox="0 0 24 24"><use href="#i-next"/></svg></button>
+                <button class="cbtn" onclick="openSheet('playlist')"><svg viewBox="0 0 24 24"><use href="#i-list"/></svg></button>
+              </div>
+              <div class="fc-row">
+                <span class="fc-note">伪装通话 · 模拟与他人通话中</span>
+                <button class="fc-btn" id="fc-btn" onclick="toggleCall()"><i></i><span id="fc-label">开启</span></button>
+              </div>
+            </div>
+            <div class="callbar" id="callbar"><i></i>通话中 <span id="call-time">00:00</span> · 妈妈</div>
+          </div>
+
+          <!-- 安全商城 -->
+          <div class="page" id="p-shop">
+            <div class="statusbar">
+              <span>22:47</span>
+              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
+            </div>
+            <div class="shop-top">
+              <div class="search-pill">
+                <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
+                <input id="shop-search" placeholder="搜索夜行防护装备" oninput="renderShop()">
+              </div>
+              <button class="bell" onclick="openSheet('cart')" title="购物车">
+                <svg viewBox="0 0 24 24"><use href="#i-bag"/></svg>
+                <span class="badge" id="shop-badge">0</span>
+              </button>
+            </div>
+            <div class="chips" id="chips"></div>
+            <div class="shop-scroll"><div class="shop-grid" id="shop-grid"></div></div>
+          </div>
+
+          <!-- 我的 -->
+          <div class="page" id="p-me">
+            <div class="statusbar">
+              <span>22:47</span>
+              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
+            </div>
+            <div class="me-scroll">
+              <div class="me-card" onclick="openAccount()" title="点击登录或修改资料">
+                <div class="me-avatar" id="avatar-box" onclick="event.stopPropagation();openAvatarMenu()" title="点击更换头像">
+                  <svg viewBox="0 0 24 24"><use href="#i-moon"/></svg>
+                  <img id="avatar-img" alt="头像">
+                  <span class="avatar-hint">更换头像</span>
+                </div>
+                <div class="me-info">
+                  <b id="acct-nickname">安安同学</b>
+                  <span id="acct-account">账号：ye_an_2026</span>
+                  <em>Lv.4 夜行守护者</em>
+                </div>
+                <button class="plain"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-chevR"/></svg></button>
+              </div>
+              <div class="me-stats">
+                <div class="me-stat"><b>36</b><small>夜行次数</small></div>
+                <div class="me-stat"><b>128km</b><small>守护里程</small></div>
+                <div class="me-stat"><b>0</b><small>意外事件</small></div>
+              </div>
+              <div class="me-grid">
+                <div class="me-tile" onclick="openSub('map')">
+                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></div>
+                  <b>我的地图</b><small>查看夜行轨迹</small>
+                </div>
+                <div class="me-tile" onclick="go('music')">
+                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-note"/></svg></div>
+                  <b>我喜欢的音乐</b><small>收藏安抚歌单</small>
+                </div>
+                <div class="me-tile" onclick="openSub('foot')">
+                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-foot"/></svg></div>
+                  <b>我的足迹</b><small>记录夜间里程</small>
+                </div>
+                <div class="me-tile" onclick="openSub('contact')">
+                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-contact"/></svg></div>
+                  <b>紧急联系人</b><small>设置联系人电话</small>
+                </div>
+              </div>
+              <div class="me-list">
+                <div class="me-row" onclick="toast('夜间模式：常亮 · 已开启护眼')">
+                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
+                  <span>夜间模式</span><em>常亮</em>
+                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
+                </div>
+                <div class="me-row" onclick="toast('定时守护：23:00 - 06:00')">
+                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-timer"/></svg></div>
+                  <span>定时守护</span><em>23:00-06:00</em>
+                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
+                </div>
+                <div class="me-row" onclick="toast('隐私与数据：影像本地加密存储')">
+                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-lock"/></svg></div>
+                  <span>隐私与数据</span><em>本地加密</em>
+                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 二级页 -->
+          <div class="subpage" id="subpage">
+            <div class="statusbar">
+              <span>22:47</span>
+              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
+            </div>
+            <div class="sub-head">
+              <button class="plain" onclick="closeSub()"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
+              <h3 id="sub-title">我的地图</h3>
+            </div>
+            <div class="sub-body" id="sub-body"></div>
+          </div>
+
+          <!-- 弹层 -->
+          <div class="mask" id="mask" onclick="closeSheet()"></div>
+          <div class="sheet" id="sheet">
+            <div class="handle"></div>
+            <div class="sh-head"><h4 id="sheet-title">播放列表</h4><button class="plain" onclick="closeSheet()"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-close"/></svg></button></div>
+            <div class="sh-body" id="sheet-body"></div>
+          </div>
+
+          <!-- 头像裁剪 -->
+          <div class="crop-overlay" id="crop-overlay">
+            <div class="crop-head">
+              <button class="cancel" onclick="closeCrop()">取消</button>
+              <span>调整头像</span>
+              <button onclick="applyCrop()">完成</button>
+            </div>
+            <div class="crop-stage" id="crop-stage">
+              <canvas id="crop-canvas"></canvas>
+              <div class="crop-circle"></div>
+            </div>
+            <div class="crop-tools">
+              <div class="ct-row"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>缩放<input type="range" id="crop-scale" min="100" max="300" value="100"></div>
+              <div class="ct-tip">拖动图片调整位置 · 滑动缩放 · 圆形框内即为最终头像</div>
+            </div>
+          </div>
+          <input type="file" id="file-camera" accept="image/*" capture="environment" style="display:none" onchange="onAvatarFile(event)">
+          <input type="file" id="file-album" accept="image/*" style="display:none" onchange="onAvatarFile(event)">
+
+          <!-- SOS -->
+          <div class="sos-overlay" id="sos-overlay">
+            <div id="sos-count-wrap" style="display:flex;flex-direction:column;align-items:center">
+              <div class="sos-ring"><b id="sos-num">3</b><small>秒后自动求救</small></div>
+              <button class="sos-cancel" onclick="cancelSOS()">我已安全 · 取消</button>
+            </div>
+            <div class="sos-panel" id="sos-panel">
+              <h3>SOS 已触发</h3>
+              <div class="sos-step" id="st1"><i>1</i>录音录像取证中 <span id="sos-rectime" style="margin-left:auto">00:00</span></div>
+              <div class="sos-step" id="st2"><i>2</i>实时位置已发送至紧急联系人</div>
+              <div class="sos-step" id="st3"><i>3</i>告警短信已送达（妈妈 · 小林）</div>
+              <div class="sos-step" id="st4"><i>4</i>已接入守护专线 110 转接</div>
+              <button class="sos-close" onclick="endSOS()">结束求助</button>
+            </div>
+          </div>
+
+          <div class="toast" id="toast"></div>
+          <div class="tabbar">
+            <button class="tab on" data-p="home" onclick="go('home')"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>首页</button>
+            <button class="tab" data-p="music" onclick="go('music')"><svg viewBox="0 0 24 24"><use href="#i-note"/></svg>音乐</button>
+            <button class="tab" data-p="shop" onclick="go('shop')"><svg viewBox="0 0 24 24"><use href="#i-shop"/></svg>商城</button>
+            <button class="tab" data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</button>
+          </div>
+          <div class="home-bar"></div>
+        
 </div></div></div>
 <script>
 
