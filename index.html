@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=bb5de63e">
-<script src="leaflet.js?v=bb5de63e"></script>
+<link rel="stylesheet" href="leaflet.css?v=c220a476">
+<script src="leaflet.js?v=c220a476"></script>
 <style>
 
 :root{
@@ -23,7 +23,7 @@ body.day{
   --ink:#eef3f7; --panel:#ffffff; --line:rgba(0,0,0,.1);
   --cyan:#0fae99; --red:#e02338; --orange:#e8790f;
   --txt:#16232e; --muted:#647589; --dim:#93a2b1;
-  --mapveil:radial-gradient(circle at 50% 40%,transparent 26%,rgba(255,255,255,.4) 100%),linear-gradient(180deg,rgba(240,245,249,.92) 0%,transparent 20%,transparent 60%,rgba(240,245,249,.96) 100%);
+  --mapveil:linear-gradient(180deg,rgba(240,245,249,.35) 0%,transparent 16%,transparent 78%,rgba(240,245,249,.45) 100%);
   --legend-bg:rgba(255,255,255,.85); --legend-txt:#33475a; --legend-line:rgba(0,0,0,.1);
   --pill-bg:rgba(255,255,255,.85);
 }
@@ -118,6 +118,7 @@ button{font-family:inherit}
 #realmap .ng-me-arrow{width:40px;height:40px;transform-origin:50% 50%;filter:drop-shadow(0 0 8px rgba(37,229,205,.9))}
 #realmap .ng-radar-sweep{position:absolute;pointer-events:none;border-radius:50%;background:conic-gradient(from 0deg,rgba(37,229,205,.42),rgba(37,229,205,.08) 50deg,transparent 95deg);animation:ngsweep 3.2s linear infinite;-webkit-mask:radial-gradient(circle,transparent 6%,#000 7%);mask:radial-gradient(circle,transparent 6%,#000 7%)}
 @keyframes ngsweep{to{transform:rotate(360deg)}}
+.map-svg,#decor-radar,.map-legend{display:none!important}
 .map-veil{position:absolute;inset:0;pointer-events:none;z-index:3;background:var(--mapveil)}
 .map-glow{filter:drop-shadow(0 0 6px rgba(37,229,205,.8))}
 .lamp-glow{filter:drop-shadow(0 0 7px rgba(255,178,80,.9))}
@@ -823,7 +824,8 @@ function startNav(silent){
 function initNgMap(lat, lng){
   if(!ngMap){
     ngMap = L.map('realmap', {zoomControl:false, attributionControl:false}).setView([lat,lng], 18);
-    L.tileLayer(DARK_TILE, {subdomains:'1234', maxZoom:19}).addTo(ngMap);
+    const initTile = DARK_TILE.replace(/style=\d/, 'style='+(settings.theme==='day'?'7':'8'));
+    L.tileLayer(initTile, {subdomains:'1234', maxZoom:19}).addTo(ngMap);
     const icon = L.divIcon({
       className:'ng-me-wrap', iconSize:[40,40], iconAnchor:[20,20],
       html:'<div class="ng-me-arrow" id="ng-arrow"><svg viewBox="0 0 40 40"><path d="M20 2 L33 34 L20 27 L7 34 Z" fill="#25e5cd" stroke="#eafffb" stroke-width="2.2" stroke-linejoin="round"/></svg></div>'
@@ -1099,7 +1101,7 @@ const GLOWS = [
   {v:0, name:'无'}, {v:4, name:'弱'}, {v:8, name:'中'}, {v:14, name:'强'}
 ];
 let settings = {
-  theme:'night',
+  theme:'day',
   icons:{ lamp:{color:'#ffb44d',shape:'circle',glow:6}, cam:{color:'#dce9f3',shape:'circle',glow:6}, safe:{color:'#25e5cd',shape:'circle',glow:6}, risk:{color:'#ff5a4d',shape:'circle',glow:6} },
   sosCd:3,
   voice:true, follow:true, acc:true, radar:true
@@ -1866,8 +1868,12 @@ renderAccount();
 initCropDrag();
 syncNav('home');
 
-// 打开即自动开启实时导航（静默请求定位）
-window.addEventListener('load', () => setTimeout(() => startNav(true), 400));
+// 打开即显示真实地图（默认位置先渲染），随后静默请求定位更新到当前位置
+window.addEventListener('load', () => {
+  const def = wgs84ToGcj02(30.54, 114.32);
+  initNgMap(def[0], def[1]);
+  setTimeout(() => startNav(true), 400);
+});
 // iOS 方向权限需用户手势：首次触摸屏幕时自动请求，之后箭头随转向
 (function autoCompass(){
   const DOE = window.DeviceOrientationEvent;
