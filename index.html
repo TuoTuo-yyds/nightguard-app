@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=dcbaf7b4">
-<script src="leaflet.js?v=dcbaf7b4"></script>
+<link rel="stylesheet" href="leaflet.css?v=7975a5f0">
+<script src="leaflet.js?v=7975a5f0"></script>
 <style>
 
 :root{
@@ -198,9 +198,10 @@ button{font-family:inherit}
 @keyframes pulse{0%{transform:scale(.75);opacity:.8}100%{transform:scale(1.12);opacity:0}}
 .guard-status{position:absolute;top:170px;left:0;right:0;z-index:30;display:flex;justify-content:center}
 .guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:var(--txt);background:var(--pill-bg);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);font-family:inherit;pointer-events:none;user-select:none}
-.guard-status .gs-pill.active{border-color:rgba(37,229,205,.75);background:rgba(9,32,29,.85);box-shadow:0 0 16px rgba(37,229,205,.25)}
+.guard-status .gs-pill.active{border-color:rgba(37,229,205,.75);background:rgba(9,32,29,.85);box-shadow:0 0 16px rgba(37,229,205,.25);color:#e9f3f8;font-weight:600}
 .guard-status .gs-pill i{width:7px;height:7px;border-radius:50%;background:#3ddc97;box-shadow:0 0 9px #3ddc97;animation:blink 1.6s infinite}
 .guard-status .gs-pill b{color:var(--cyan)}
+.guard-status .gs-pill.active b{color:#5ff5e0}
 .map-legend{position:absolute;top:510px;left:18px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-size:10.5px;color:var(--legend-txt);background:var(--legend-bg);border:1px solid var(--legend-line);border-radius:14px;padding:11px 13px;backdrop-filter:blur(8px)}
 .map-legend strong{font-size:10px;color:var(--muted);letter-spacing:1px;font-weight:600;margin-bottom:1px}
 .map-legend span{display:flex;align-items:center;gap:7px}
@@ -499,7 +500,7 @@ button{font-family:inherit}
 .sos-close{margin-top:12px;padding:11px 36px;border-radius:99px;border:none;background:var(--red);color:#fff;font-size:13.5px;cursor:pointer;letter-spacing:2px}
 
 /* Toast */
-.toast{position:absolute;left:50%;bottom:100px;transform:translate(-50%,16px);z-index:90;background:rgba(16,25,35,.97);border:1px solid rgba(255,255,255,.12);color:var(--txt);padding:10px 18px;border-radius:99px;font-size:12.5px;opacity:0;pointer-events:none;transition:.3s;white-space:nowrap;max-width:330px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 12px 30px rgba(0,0,0,.55)}
+.toast{position:absolute;left:50%;bottom:100px;transform:translate(-50%,16px);z-index:90;background:rgba(16,25,35,.97);border:1px solid rgba(255,255,255,.12);color:#e9f3f8;font-weight:600;padding:10px 18px;border-radius:99px;font-size:12.5px;opacity:0;pointer-events:none;transition:.3s;white-space:nowrap;max-width:330px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 12px 30px rgba(0,0,0,.55)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 footer{padding:36px 5vw 54px;text-align:center;color:var(--dim);font-size:12px;border-top:1px solid var(--line)}
