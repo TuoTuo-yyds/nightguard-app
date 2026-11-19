@@ -7,14 +7,25 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a11">
 <title>夜安 NightGuard · APP 界面设计</title>
-<link rel="stylesheet" href="leaflet.css?v=7b5e7014">
-<script src="leaflet.js?v=7b5e7014"></script>
+<link rel="stylesheet" href="leaflet.css?v=bb5de63e">
+<script src="leaflet.js?v=bb5de63e"></script>
 <style>
 
 :root{
   --ink:#050a11; --panel:#0b121b; --line:rgba(255,255,255,.09);
   --cyan:#25e5cd; --red:#ff2d3f; --orange:#ff8a1f;
   --txt:#e9f3f8; --muted:#7c8da0; --dim:#4e5f73;
+  --mapveil:radial-gradient(circle at 50% 40%,transparent 26%,rgba(3,7,12,.55) 100%),linear-gradient(180deg,rgba(3,7,12,.92) 0%,transparent 20%,transparent 60%,rgba(3,7,12,.96) 100%);
+  --legend-bg:rgba(6,14,20,.68); --legend-txt:#b6c6d4; --legend-line:rgba(255,255,255,.08);
+  --pill-bg:rgba(6,14,20,.78);
+}
+body.day{
+  --ink:#eef3f7; --panel:#ffffff; --line:rgba(0,0,0,.1);
+  --cyan:#0fae99; --red:#e02338; --orange:#e8790f;
+  --txt:#16232e; --muted:#647589; --dim:#93a2b1;
+  --mapveil:radial-gradient(circle at 50% 40%,transparent 26%,rgba(255,255,255,.4) 100%),linear-gradient(180deg,rgba(240,245,249,.92) 0%,transparent 20%,transparent 60%,rgba(240,245,249,.96) 100%);
+  --legend-bg:rgba(255,255,255,.85); --legend-txt:#33475a; --legend-line:rgba(0,0,0,.1);
+  --pill-bg:rgba(255,255,255,.85);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -74,7 +85,8 @@ button{font-family:inherit}
 .statusbar .sb-r svg{height:11px;width:auto}
 .bat{width:25px;height:12px;border:1.2px solid rgba(255,255,255,.55);border-radius:4px;padding:1.6px}
 .bat i{display:block;height:100%;width:82%;background:var(--txt);border-radius:1.5px}
-.statusbar.abs{position:absolute;top:0;left:0;right:0;background:linear-gradient(180deg,rgba(3,8,13,.9),rgba(3,8,13,0))}
+.statusbar.abs{position:absolute;top:0;left:0;right:0;background:linear-gradient(180deg,var(--sbgrad),transparent)}
+:root{--sbgrad:rgba(3,8,13,.9)} body.day{--sbgrad:rgba(240,245,249,.9)}
 
 /* 页面 */
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -106,7 +118,7 @@ button{font-family:inherit}
 #realmap .ng-me-arrow{width:40px;height:40px;transform-origin:50% 50%;filter:drop-shadow(0 0 8px rgba(37,229,205,.9))}
 #realmap .ng-radar-sweep{position:absolute;pointer-events:none;border-radius:50%;background:conic-gradient(from 0deg,rgba(37,229,205,.42),rgba(37,229,205,.08) 50deg,transparent 95deg);animation:ngsweep 3.2s linear infinite;-webkit-mask:radial-gradient(circle,transparent 6%,#000 7%);mask:radial-gradient(circle,transparent 6%,#000 7%)}
 @keyframes ngsweep{to{transform:rotate(360deg)}}
-.map-veil{position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at 50% 40%,transparent 26%,rgba(3,7,12,.55) 100%),linear-gradient(180deg,rgba(3,7,12,.92) 0%,transparent 20%,transparent 60%,rgba(3,7,12,.96) 100%)}
+.map-veil{position:absolute;inset:0;pointer-events:none;z-index:3;background:var(--mapveil)}
 .map-glow{filter:drop-shadow(0 0 6px rgba(37,229,205,.8))}
 .lamp-glow{filter:drop-shadow(0 0 7px rgba(255,178,80,.9))}
 .cam-glow{filter:drop-shadow(0 0 5px rgba(120,210,255,.6))}
@@ -144,10 +156,6 @@ button{font-family:inherit}
 .route-card .rc-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:#93a7b8}
 .route-card .rc-stats span{display:flex;align-items:center;gap:4px}
 .route-card .rc-stats i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.route-card .rc-stats i.lg-lamp{background:#ffb44d;box-shadow:0 0 6px rgba(255,180,77,.8)}
-.route-card .rc-stats i.lg-cam{background:#dce9f3;box-shadow:0 0 6px rgba(220,233,243,.7)}
-.route-card .rc-stats i.lg-safe{background:#25e5cd;box-shadow:0 0 6px rgba(37,229,205,.8)}
-.route-card .rc-stats i.lg-risk{background:#ff5a4d;box-shadow:0 0 6px rgba(255,90,77,.8)}
 .route-card .rc-note{font-size:10.5px;color:#8497a9;line-height:1.6;margin-top:9px}
 .route-card .rc-note.warn{color:#ffb057}
 .route-card .rc-note.good{color:#5ff0dd}
@@ -188,18 +196,18 @@ button{font-family:inherit}
 .radar .pulse{position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(37,229,205,.5);animation:pulse 3s ease-out infinite}
 @keyframes pulse{0%{transform:scale(.75);opacity:.8}100%{transform:scale(1.12);opacity:0}}
 .guard-status{position:absolute;top:170px;left:0;right:0;z-index:30;display:flex;justify-content:center}
-.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:#d6f5f0;background:rgba(6,14,20,.78);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);cursor:pointer;font-family:inherit;transition:.2s}
+.guard-status .gs-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11px;color:var(--txt);background:var(--pill-bg);border:1px solid rgba(37,229,205,.35);backdrop-filter:blur(8px);cursor:pointer;font-family:inherit;transition:.2s}
 .guard-status .gs-pill.active{border-color:rgba(37,229,205,.75);background:rgba(9,32,29,.85);box-shadow:0 0 16px rgba(37,229,205,.25)}
 .guard-status .gs-pill i{width:7px;height:7px;border-radius:50%;background:#3ddc97;box-shadow:0 0 9px #3ddc97;animation:blink 1.6s infinite}
 .guard-status .gs-pill b{color:var(--cyan)}
-.map-legend{position:absolute;top:510px;left:18px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-size:10.5px;color:#b6c6d4;background:rgba(6,14,20,.68);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:11px 13px;backdrop-filter:blur(8px)}
+.map-legend{position:absolute;top:510px;left:18px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-size:10.5px;color:var(--legend-txt);background:var(--legend-bg);border:1px solid var(--legend-line);border-radius:14px;padding:11px 13px;backdrop-filter:blur(8px)}
 .map-legend strong{font-size:10px;color:var(--muted);letter-spacing:1px;font-weight:600;margin-bottom:1px}
 .map-legend span{display:flex;align-items:center;gap:7px}
-.map-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.map-legend .lg-lamp{background:#ffb44d;box-shadow:0 0 6px rgba(255,180,77,.8)}
-.map-legend .lg-cam{background:#dce9f3;box-shadow:0 0 6px rgba(220,233,243,.7)}
-.map-legend .lg-safe{background:#25e5cd;box-shadow:0 0 6px rgba(37,229,205,.8)}
-.map-legend .lg-risk{background:#ff5a4d;box-shadow:0 0 6px rgba(255,90,77,.8)}
+.map-legend i{width:7px;height:7px;background:var(--ic,currentColor);box-shadow:0 0 var(--glow,6px) var(--ic,currentColor);display:inline-block}
+.lg-lamp{--ic:#ffb44d} .lg-cam{--ic:#dce9f3} .lg-safe{--ic:#25e5cd} .lg-risk{--ic:#ff5a4d}
+/* 形状 */
+.shape-square{border-radius:1px!important} .shape-tri{border-radius:0!important;clip-path:polygon(50% 0,100% 100%,0 100%)} .shape-diamond{border-radius:0!important;transform:rotate(45deg)} .shape-star{border-radius:0!important;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.route-card .rc-stats i.lg-lamp,.route-card .rc-stats i.lg-cam,.route-card .rc-stats i.lg-safe,.route-card .rc-stats i.lg-risk{background:var(--ic);box-shadow:0 0 var(--glow,6px) var(--ic)}
 .home-actions{position:absolute;bottom:98px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:20px;z-index:30}
 .sos-big{width:132px;height:132px;border-radius:50%;border:none;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:radial-gradient(circle at 38% 28%,#ff6b73 0%,#f01a2e 45%,#b30619 100%);color:#fff;font-size:31px;font-weight:800;letter-spacing:1px;box-shadow:0 0 42px rgba(255,45,63,.6),inset 0 -8px 20px rgba(0,0,0,.35),inset 0 6px 14px rgba(255,255,255,.18);transition:transform .12s}
 .sos-big .sos-sub{font-size:10px;font-weight:600;letter-spacing:3px;opacity:.85}
@@ -415,6 +423,44 @@ button{font-family:inherit}
 .add-line{width:100%;padding:13px;border-radius:16px;border:1px dashed rgba(255,255,255,.16);background:none;color:#8ba0b2;font-size:12.5px;cursor:pointer;transition:.2s}
 .add-line:hover{border-color:rgba(37,229,205,.5);color:var(--cyan)}
 
+/* 设置面板 */
+.settings-page{position:absolute;inset:0;z-index:68;background:var(--ink);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.settings-page.open{transform:none}
+.set-head{display:flex;align-items:center;gap:12px;padding:0 18px 14px;flex-shrink:0}
+.set-head h3{font-size:17px;font-weight:700;letter-spacing:.5px;flex:1}
+.set-scroll{flex:1;overflow-y:auto;padding:0 16px 30px;scrollbar-width:none}
+.set-scroll::-webkit-scrollbar{display:none}
+.set-group{margin-top:18px}
+.set-group h5{font-size:11px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;font-weight:700}
+.set-row{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:15px;background:var(--panel);border:1px solid var(--line);margin-bottom:9px}
+.set-row .sr-ico{width:32px;height:32px;border-radius:9px;background:rgba(37,229,205,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cyan)}
+.set-row .sr-ico svg{width:17px;height:17px}
+.set-row .sr-label{flex:1;min-width:0}
+.set-row .sr-label b{display:block;font-size:13px;font-weight:600}
+.set-row .sr-label small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+/* 分段选择 */
+.seg-ctrl{display:flex;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:11px;padding:3px;flex-shrink:0}
+.seg-ctrl button{border:none;background:none;color:var(--muted);font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
+.seg-ctrl button.on{background:linear-gradient(135deg,#4df3dc,#00bfa8);color:#032a26;font-weight:700;box-shadow:0 0 12px rgba(37,229,205,.35)}
+/* 开关 */
+.toggle{width:44px;height:25px;border-radius:99px;background:rgba(255,255,255,.14);position:relative;cursor:pointer;transition:.25s;flex-shrink:0;border:none}
+.toggle i{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#e9f3f8;transition:.25s}
+.toggle.on{background:var(--cyan)}
+.toggle.on i{left:22px;background:#032a26}
+/* 图标个性化行 */
+.icon-custom{border-radius:15px;background:var(--panel);border:1px solid var(--line);padding:13px 15px;margin-bottom:9px}
+.icon-custom .ic-head{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.icon-custom .ic-preview{width:20px;height:20px;border-radius:50%;background:var(--ic);box-shadow:0 0 var(--glow,6px) var(--ic);flex-shrink:0}
+.icon-custom .ic-head b{font-size:12.5px;flex:1}
+.ic-opt{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--muted)}
+.ic-opt .opt-label{width:26px;flex-shrink:0}
+.color-dots{display:flex;gap:7px}
+.color-dot{width:19px;height:19px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s}
+.color-dot.on{border-color:var(--txt);transform:scale(1.15)}
+.shape-opts{display:flex;gap:6px;flex:1}
+.shape-opt{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted)}
+.shape-opt.on{border-color:var(--cyan);background:rgba(37,229,205,.12)}
+.shape-opt i{width:9px;height:9px;background:currentColor;display:block}
 /* 弹层 */
 .mask{position:absolute;inset:0;background:rgba(2,6,10,.62);backdrop-filter:blur(3px);z-index:70;opacity:0;pointer-events:none;transition:.25s}
 .mask.show{opacity:1;pointer-events:auto}
@@ -583,7 +629,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
             <div class="home-top">
               <button class="hbtn" onclick="go('cam')" title="夜视相机"><svg viewBox="0 0 24 24"><use href="#i-cam"/></svg></button>
               <button class="hbtn" id="layer-btn" onclick="cycleLayer()" title="图层切换"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></button>
-              <button class="hbtn" onclick="toast('守护设置：SOS 倒计时 3 秒 · 夜间模式已开启')" title="设置"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
+              <button class="hbtn" onclick="openSettings()" title="设置"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
             </div>
 
             <div class="guard-status"><button class="gs-pill" onclick="startNav(false)" id="nav-btn" title="实时定位导航"><i></i><span id="nav-status">正在启动实时导航…</span></button></div>
@@ -620,224 +666,68 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
               <div class="rp-dest" id="rp-dest">目的地</div>
               <div id="route-list"></div>
             </div>
-          </div>
 
-          <!-- 夜视相机 -->
-          <div class="page" id="p-cam">
-            <canvas id="vf" width="201" height="437"></canvas>
-            <div class="vf-scan"></div>
-            <div class="vf-vignette"></div>
-            <div class="statusbar abs">
-              <span>22:47</span>
-              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
-            </div>
-            <div class="cam-top">
-              <button class="hbtn" onclick="go('home')" title="返回"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
-              <div class="seg">
-                <button id="seg-nv" class="on" onclick="setMode('nv')">夜视仪</button>
-                <button id="seg-ir" onclick="setMode('ir')">红外热量仪</button>
+            <!-- 设置面板 -->
+            <div class="settings-page" id="settings-page">
+              <div class="statusbar"><span>22:47</span><span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span></div>
+              <div class="set-head">
+                <button class="plain" onclick="closeSettings()"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
+                <h3>设置</h3>
               </div>
-            </div>
-            <div class="rec-chip" id="rec-chip"><i></i>REC <span id="rec-time">00:00</span></div>
-            <div class="cam-sheet">
-              <button class="cam-pill on" id="pill-photo" onclick="setCapture('photo')"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg>照片</button>
-              <button class="shutter" id="shutter" onclick="pressShutter()"><span></span></button>
-              <button class="cam-pill" id="pill-video" onclick="setCapture('video')"><svg viewBox="0 0 24 24"><use href="#i-video"/></svg>视频<i class="rdot"></i></button>
-            </div>
-            <div class="flash" id="flash"></div>
-          </div>
-
-          <!-- 音乐安抚 -->
-          <div class="page" id="p-music">
-            <div class="statusbar">
-              <span>22:47</span>
-              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
-            </div>
-            <div class="m-top">
-              <button class="plain" onclick="go('home')"><svg viewBox="0 0 24 24"><use href="#i-down"/></svg></button>
-              <div class="m-search">
-                <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
-                <input id="m-search" placeholder="搜索安抚音乐或白噪音" oninput="filterTracks()">
-              </div>
-              <button class="plain" onclick="openSheet('playlist')"><svg viewBox="0 0 24 24"><use href="#i-list"/></svg></button>
-            </div>
-
-            <div class="record-card">
-              <div class="tonearm" id="tonearm"><span class="pivot"></span><span class="head"></span></div>
-              <div class="vinyl" id="vinyl"><div class="art"><span>夜安</span></div></div>
-              <button class="timer-mini" onclick="toast('睡眠定时：30 分钟后自动停止')"><svg viewBox="0 0 24 24"><use href="#i-timer"/></svg></button>
-            </div>
-
-            <div class="m-meta">
-              <div class="m-title-row">
-                <div><h4 id="m-title">安抚白噪音</h4><p id="m-sub">夜间陪伴</p></div>
-                <span class="playing-tag" id="playing-tag">● 待播放</span>
-              </div>
-              <div class="bar" id="bar" onclick="seek(event)"><i id="bar-fill"></i><b id="bar-dot"></b></div>
-              <div class="times"><span id="t-cur">00:00</span><span id="t-dur">30:00</span></div>
-              <div class="m-ctrl">
-                <button class="cbtn" id="loop-btn2" onclick="toggleLoop()"><svg viewBox="0 0 24 24"><use href="#i-repeat"/></svg></button>
-                <button class="cbtn" onclick="prevTrack()"><svg viewBox="0 0 24 24"><use href="#i-prev"/></svg></button>
-                <button class="play-btn" id="play-btn" onclick="togglePlay()"><svg viewBox="0 0 24 24" id="play-icon"><use href="#i-play"/></svg></button>
-                <button class="cbtn" onclick="nextTrack()"><svg viewBox="0 0 24 24"><use href="#i-next"/></svg></button>
-                <button class="cbtn" onclick="openSheet('playlist')"><svg viewBox="0 0 24 24"><use href="#i-list"/></svg></button>
-              </div>
-              <div class="fc-row">
-                <span class="fc-note">伪装通话 · 模拟与他人通话中</span>
-                <button class="fc-btn" id="fc-btn" onclick="toggleCall()"><i></i><span id="fc-label">开启</span></button>
-              </div>
-            </div>
-            <div class="callbar" id="callbar"><i></i>通话中 <span id="call-time">00:00</span> · 妈妈</div>
-          </div>
-
-          <!-- 安全商城 -->
-          <div class="page" id="p-shop">
-            <div class="statusbar">
-              <span>22:47</span>
-              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
-            </div>
-            <div class="shop-top">
-              <div class="search-pill">
-                <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
-                <input id="shop-search" placeholder="搜索夜行防护装备" oninput="renderShop()">
-              </div>
-              <button class="bell" onclick="openSheet('cart')" title="购物车">
-                <svg viewBox="0 0 24 24"><use href="#i-bag"/></svg>
-                <span class="badge" id="shop-badge">0</span>
-              </button>
-            </div>
-            <div class="chips" id="chips"></div>
-            <div class="shop-scroll"><div class="shop-grid" id="shop-grid"></div></div>
-          </div>
-
-          <!-- 我的 -->
-          <div class="page" id="p-me">
-            <div class="statusbar">
-              <span>22:47</span>
-              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
-            </div>
-            <div class="me-scroll">
-              <div class="me-card" onclick="openAccount()" title="点击登录或修改资料">
-                <div class="me-avatar" id="avatar-box" onclick="event.stopPropagation();openAvatarMenu()" title="点击更换头像">
-                  <svg viewBox="0 0 24 24"><use href="#i-moon"/></svg>
-                  <img id="avatar-img" alt="头像">
-                  <span class="avatar-hint">更换头像</span>
+              <div class="set-scroll">
+                <div class="set-group">
+                  <h5>外观模式</h5>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
+                    <div class="sr-label"><b>主题模式</b><small>夜间护眼 / 白天清晰</small></div>
+                    <div class="seg-ctrl"><button id="theme-night" class="on" onclick="setTheme('night')">夜色</button><button id="theme-day" onclick="setTheme('day')">白天</button></div>
+                  </div>
                 </div>
-                <div class="me-info">
-                  <b id="acct-nickname">安安同学</b>
-                  <span id="acct-account">账号：ye_an_2026</span>
-                  <em>Lv.4 夜行守护者</em>
+
+                <div class="set-group">
+                  <h5>地图点位个性化</h5>
+                  <div id="icon-custom-list"></div>
                 </div>
-                <button class="plain"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-chevR"/></svg></button>
-              </div>
-              <div class="me-stats">
-                <div class="me-stat"><b>36</b><small>夜行次数</small></div>
-                <div class="me-stat"><b>128km</b><small>守护里程</small></div>
-                <div class="me-stat"><b>0</b><small>意外事件</small></div>
-              </div>
-              <div class="me-grid">
-                <div class="me-tile" onclick="openSub('map')">
-                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></div>
-                  <b>我的地图</b><small>查看夜行轨迹</small>
+
+                <div class="set-group">
+                  <h5>导航与安全</h5>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-timer"/></svg></div>
+                    <div class="sr-label"><b>SOS 倒计时</b><small>触发求救前的取消时间</small></div>
+                    <div class="seg-ctrl"><button class="sos-cd on" data-v="3" onclick="setSosCd(3)">3秒</button><button class="sos-cd" data-v="5" onclick="setSosCd(5)">5秒</button><button class="sos-cd" data-v="8" onclick="setSosCd(8)">8秒</button></div>
+                  </div>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-bell"/></svg></div>
+                    <div class="sr-label"><b>危险语音提醒</b><small>进入照明不足区域时提示</small></div>
+                    <button class="toggle on" id="tg-voice" onclick="toggleSetting('voice')"><i></i></button>
+                  </div>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-location"/></svg></div>
+                    <div class="sr-label"><b>实时位置跟随</b><small>地图自动跟随你的位置</small></div>
+                    <button class="toggle on" id="tg-follow" onclick="toggleSetting('follow')"><i></i></button>
+                  </div>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-gear"/></svg></div>
+                    <div class="sr-label"><b>显示定位精度</b><small>导航条显示 ±xx 米</small></div>
+                    <button class="toggle on" id="tg-acc" onclick="toggleSetting('acc')"><i></i></button>
+                  </div>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-cam"/></svg></div>
+                    <div class="sr-label"><b>雷达扫描动画</b><small>实时定位圈旋转扫描效果</small></div>
+                    <button class="toggle on" id="tg-radar" onclick="toggleSetting('radar')"><i></i></button>
+                  </div>
                 </div>
-                <div class="me-tile" onclick="go('music')">
-                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-note"/></svg></div>
-                  <b>我喜欢的音乐</b><small>收藏安抚歌单</small>
-                </div>
-                <div class="me-tile" onclick="openSub('foot')">
-                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-foot"/></svg></div>
-                  <b>我的足迹</b><small>记录夜间里程</small>
-                </div>
-                <div class="me-tile" onclick="openSub('contact')">
-                  <div class="ti"><svg viewBox="0 0 24 24"><use href="#i-contact"/></svg></div>
-                  <b>紧急联系人</b><small>设置联系人电话</small>
+
+                <div class="set-group">
+                  <h5>关于</h5>
+                  <div class="set-row">
+                    <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
+                    <div class="sr-label"><b>夜安 NightGuard</b><small>夜间独行安全守护 · v1.0</small></div>
+                  </div>
                 </div>
               </div>
-              <div class="me-list">
-                <div class="me-row" onclick="toast('夜间模式：常亮 · 已开启护眼')">
-                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
-                  <span>夜间模式</span><em>常亮</em>
-                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
-                </div>
-                <div class="me-row" onclick="toast('定时守护：23:00 - 06:00')">
-                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-timer"/></svg></div>
-                  <span>定时守护</span><em>23:00-06:00</em>
-                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
-                </div>
-                <div class="me-row" onclick="toast('隐私与数据：影像本地加密存储')">
-                  <div class="ri"><svg viewBox="0 0 24 24"><use href="#i-lock"/></svg></div>
-                  <span>隐私与数据</span><em>本地加密</em>
-                  <svg class="chev" viewBox="0 0 24 24"><use href="#i-chevR"/></svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 二级页 -->
-          <div class="subpage" id="subpage">
-            <div class="statusbar">
-              <span>22:47</span>
-              <span class="sb-r"><svg viewBox="0 0 18 12"><use href="#i-signal"/></svg><svg viewBox="0 0 16 12"><use href="#i-wifi"/></svg><span class="bat"><i></i></span></span>
-            </div>
-            <div class="sub-head">
-              <button class="plain" onclick="closeSub()"><svg viewBox="0 0 24 24"><use href="#i-chevL"/></svg></button>
-              <h3 id="sub-title">我的地图</h3>
-            </div>
-            <div class="sub-body" id="sub-body"></div>
-          </div>
-
-          <!-- 弹层 -->
-          <div class="mask" id="mask" onclick="closeSheet()"></div>
-          <div class="sheet" id="sheet">
-            <div class="handle"></div>
-            <div class="sh-head"><h4 id="sheet-title">播放列表</h4><button class="plain" onclick="closeSheet()"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-close"/></svg></button></div>
-            <div class="sh-body" id="sheet-body"></div>
-          </div>
-
-          <!-- 头像裁剪 -->
-          <div class="crop-overlay" id="crop-overlay">
-            <div class="crop-head">
-              <button class="cancel" onclick="closeCrop()">取消</button>
-              <span>调整头像</span>
-              <button onclick="applyCrop()">完成</button>
-            </div>
-            <div class="crop-stage" id="crop-stage">
-              <canvas id="crop-canvas"></canvas>
-              <div class="crop-circle"></div>
-            </div>
-            <div class="crop-tools">
-              <div class="ct-row"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>缩放<input type="range" id="crop-scale" min="100" max="300" value="100"></div>
-              <div class="ct-tip">拖动图片调整位置 · 滑动缩放 · 圆形框内即为最终头像</div>
-            </div>
-          </div>
-          <input type="file" id="file-camera" accept="image/*" capture="environment" style="display:none" onchange="onAvatarFile(event)">
-          <input type="file" id="file-album" accept="image/*" style="display:none" onchange="onAvatarFile(event)">
-
-          <!-- SOS -->
-          <div class="sos-overlay" id="sos-overlay">
-            <div id="sos-count-wrap" style="display:flex;flex-direction:column;align-items:center">
-              <div class="sos-ring"><b id="sos-num">3</b><small>秒后自动求救</small></div>
-              <button class="sos-cancel" onclick="cancelSOS()">我已安全 · 取消</button>
-            </div>
-            <div class="sos-panel" id="sos-panel">
-              <h3>SOS 已触发</h3>
-              <div class="sos-step" id="st1"><i>1</i>录音录像取证中 <span id="sos-rectime" style="margin-left:auto">00:00</span></div>
-              <div class="sos-step" id="st2"><i>2</i>实时位置已发送至紧急联系人</div>
-              <div class="sos-step" id="st3"><i>3</i>告警短信已送达（妈妈 · 小林）</div>
-              <div class="sos-step" id="st4"><i>4</i>已接入守护专线 110 转接</div>
-              <button class="sos-close" onclick="endSOS()">结束求助</button>
-            </div>
-          </div>
-
-          <div class="toast" id="toast"></div>
-          <div class="tabbar">
-            <button class="tab on" data-p="home" onclick="go('home')"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>首页</button>
-            <button class="tab" data-p="music" onclick="go('music')"><svg viewBox="0 0 24 24"><use href="#i-note"/></svg>音乐</button>
-            <button class="tab" data-p="shop" onclick="go('shop')"><svg viewBox="0 0 24 24"><use href="#i-shop"/></svg>商城</button>
-            <button class="tab" data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</button>
-          </div>
-          <div class="home-bar"></div>
-        
+              <div class="home-bar"></div>
+            
 </div></div></div>
 <script>
 
@@ -1190,6 +1080,113 @@ function highlightRoute(){
   });
 }
 
+/* ================= 设置面板 ================= */
+const ICON_TYPES = [
+  {key:'lamp', name:'路灯', cls:'lg-lamp'},
+  {key:'cam', name:'监控', cls:'lg-cam'},
+  {key:'safe', name:'人', cls:'lg-safe'},
+  {key:'risk', name:'照明不足', cls:'lg-risk'}
+];
+const COLORS = ['#ffb44d','#dce9f3','#25e5cd','#ff5a4d','#a78bfa','#ff7ab8','#4ade80','#ffffff'];
+const SHAPES = [
+  {key:'circle', name:'圆'},
+  {key:'square', name:'方'},
+  {key:'tri', name:'三角'},
+  {key:'diamond', name:'菱'},
+  {key:'star', name:'星'}
+];
+const GLOWS = [
+  {v:0, name:'无'}, {v:4, name:'弱'}, {v:8, name:'中'}, {v:14, name:'强'}
+];
+let settings = {
+  theme:'night',
+  icons:{ lamp:{color:'#ffb44d',shape:'circle',glow:6}, cam:{color:'#dce9f3',shape:'circle',glow:6}, safe:{color:'#25e5cd',shape:'circle',glow:6}, risk:{color:'#ff5a4d',shape:'circle',glow:6} },
+  sosCd:3,
+  voice:true, follow:true, acc:true, radar:true
+};
+function loadSettings(){
+  try{ const s = JSON.parse(localStorage.getItem('ng_settings')); if(s) settings = Object.assign(settings, s); }catch(e){}
+}
+function saveSettings(){ try{ localStorage.setItem('ng_settings', JSON.stringify(settings)); }catch(e){} }
+function openSettings(){ renderSettings(); $('settings-page').classList.add('open'); }
+function closeSettings(){ $('settings-page').classList.remove('open'); saveSettings(); }
+function setTheme(t){
+  settings.theme = t;
+  document.body.classList.toggle('day', t==='day');
+  $('theme-night').classList.toggle('on', t==='night');
+  $('theme-day').classList.toggle('on', t==='day');
+  if(ngMap){
+    const tile = ngMap._layers && Object.values(ngMap._layers).find(l=>l._url);
+    // 切换高德瓦片风格：夜间深色 style=8 / 白天标准 style=7
+    if(tile && tile._url){
+      const nu = tile._url.replace(/style=\d/, 'style='+(t==='day'?'7':'8'));
+      tile.setUrl(nu);
+    }
+  }
+  saveSettings();
+  toast(t==='day'?'已切换为白天模式':'已切换为夜色模式');
+}
+function renderIconCustom(){
+  $('icon-custom-list').innerHTML = ICON_TYPES.map(t=>{
+    const cfg = settings.icons[t.key];
+    return `<div class="icon-custom" style="--ic:${cfg.color};--glow:${cfg.glow}px">
+      <div class="ic-head"><span class="ic-preview shape-${cfg.shape}"></span><b>${t.name}</b></div>
+      <div class="ic-opt"><span class="opt-label">颜色</span><div class="color-dots">
+        ${COLORS.map(c=>`<span class="color-dot ${c.toLowerCase()===cfg.color.toLowerCase()?'on':''}" style="background:${c}" onclick="setIconOpt('${t.key}','color','${c}')"></span>`).join('')}
+      </div></div>
+      <div class="ic-opt"><span class="opt-label">形状</span><div class="shape-opts">
+        ${SHAPES.map(s=>`<span class="shape-opt ${cfg.shape===s.key?'on':''}" onclick="setIconOpt('${t.key}','shape','${s.key}')" title="${s.name}"><i class="shape-${s.key}"></i></span>`).join('')}
+      </div></div>
+      <div class="ic-opt"><span class="opt-label">发光</span><div class="shape-opts">
+        ${GLOWS.map(g=>`<span class="shape-opt ${cfg.glow===g.v?'on':''}" onclick="setIconOpt('${t.key}','glow',${g.v})" style="font-size:9px">${g.name}</span>`).join('')}
+      </div></div>
+    </div>`;
+  }).join('');
+}
+function setIconOpt(key, opt, val){
+  settings.icons[key][opt] = val;
+  applyIconStyles();
+  renderIconCustom();
+  saveSettings();
+}
+function applyIconStyles(){
+  ICON_TYPES.forEach(t=>{
+    const cfg = settings.icons[t.key];
+    document.querySelectorAll('.'+t.cls).forEach(el=>{
+      el.style.setProperty('--ic', cfg.color);
+      el.style.setProperty('--glow', cfg.glow+'px');
+      SHAPES.forEach(s=>el.classList.remove('shape-'+s.key));
+      if(cfg.shape!=='circle') el.classList.add('shape-'+cfg.shape);
+    });
+  });
+}
+function setSosCd(v){
+  settings.sosCd = v;
+  document.querySelectorAll('.sos-cd').forEach(b=>b.classList.toggle('on', +b.dataset.v===v));
+  saveSettings();
+  toast('SOS 倒计时已设为 '+v+' 秒');
+}
+function toggleSetting(k){
+  settings[k] = !settings[k];
+  const el = $('tg-'+k); if(el) el.classList.toggle('on', settings[k]);
+  if(k==='radar'){
+    const sweep = $('realmap') && document.querySelector('.ng-radar-sweep');
+    if(sweep) sweep.style.display = settings.radar ? '' : 'none';
+    const dr = $('decor-radar') && document.querySelector('#decor-radar .sweep');
+    if(dr) dr.style.display = settings.radar ? '' : 'none';
+  }
+  if(k==='acc' && !settings.acc){
+    const st = $('nav-status'); if(st && st.textContent.indexOf('精度')>=0) st.textContent = '导航中 · 跟随实时位置';
+  }
+  saveSettings();
+}
+function renderSettings(){
+  setTheme(settings.theme);
+  renderIconCustom();
+  document.querySelectorAll('.sos-cd').forEach(b=>b.classList.toggle('on', +b.dataset.v===settings.sosCd));
+  ['voice','follow','acc','radar'].forEach(k=>{ const el=$('tg-'+k); if(el) el.classList.toggle('on', !!settings[k]); });
+}
+
 /* ================= 首页图层 ================= */
 let layer = 0;
 function cycleLayer(){
@@ -1209,8 +1206,8 @@ function openSOS(){
   $('sos-overlay').classList.add('open');
   $('sos-count-wrap').style.display = 'flex';
   $('sos-panel').classList.remove('show');
-  $('sos-num').textContent = '3';
-  sosNum = 3;
+  $('sos-num').textContent = settings.sosCd;
+  sosNum = settings.sosCd;
   clearInterval(sosTimer);
   sosTimer = setInterval(()=>{
     sosNum--;
@@ -1859,6 +1856,9 @@ function openSub(key){
 function closeSub(){ $('subpage').classList.remove('open'); }
 
 /* ================= 初始化 ================= */
+loadSettings();
+setTheme(settings.theme);
+applyIconStyles();
 renderChips();
 renderShop();
 paintMusic();
