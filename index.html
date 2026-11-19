@@ -719,8 +719,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;oversc
                   <h5>外观模式</h5>
                   <div class="set-row">
                     <div class="sr-ico"><svg viewBox="0 0 24 24"><use href="#i-moon"/></svg></div>
-                    <div class="sr-label"><b>主题模式</b><small>夜间护眼 / 白天清晰</small></div>
-                    <div class="seg-ctrl"><button id="theme-night" class="on" onclick="setTheme('night')">夜色</button><button id="theme-day" onclick="setTheme('day')">白天</button></div>
+                    <div class="sr-label"><b>主题模式</b><small>夜色护眼 · 常亮</small></div>
+                    <div class="seg-ctrl"><button id="theme-night" class="on" onclick="toast('当前为夜色模式，已锁定')">夜色</button></div>
                   </div>
                 </div>
 
@@ -1081,7 +1081,7 @@ function startNav(silent){
 function initNgMap(lat, lng){
   if(!ngMap){
     ngMap = L.map('realmap', {zoomControl:false, attributionControl:false}).setView([lat,lng], 18);
-    const initTile = DARK_TILE.replace(/style=\d/, 'style='+(settings.theme==='day'?'7':'8'));
+    const initTile = DARK_TILE;
     L.tileLayer(initTile, {subdomains:'1234', maxZoom:19}).addTo(ngMap);
     const icon = L.divIcon({
       className:'ng-me-wrap', iconSize:[40,40], iconAnchor:[20,20],
@@ -1355,32 +1355,31 @@ const GLOWS = [
   {v:0, name:'无'}, {v:4, name:'弱'}, {v:8, name:'中'}, {v:14, name:'强'}
 ];
 let settings = {
-  theme:'day',
+  theme:'night',
   icons:{ lamp:{color:'#ffb44d',shape:'circle',glow:6}, cam:{color:'#dce9f3',shape:'circle',glow:6}, safe:{color:'#25e5cd',shape:'circle',glow:6}, risk:{color:'#ff5a4d',shape:'circle',glow:6} },
   sosCd:3,
   voice:true, follow:true, acc:true, radar:true
 };
 function loadSettings(){
   try{ const s = JSON.parse(localStorage.getItem('ng_settings')); if(s) settings = Object.assign(settings, s); }catch(e){}
+  settings.theme = 'night';
 }
 function saveSettings(){ try{ localStorage.setItem('ng_settings', JSON.stringify(settings)); }catch(e){} }
 function openSettings(){ renderSettings(); $('settings-page').classList.add('open'); }
 function closeSettings(){ $('settings-page').classList.remove('open'); saveSettings(); }
-function setTheme(t){
-  settings.theme = t;
-  document.body.classList.toggle('day', t==='day');
-  $('theme-night').classList.toggle('on', t==='night');
-  $('theme-day').classList.toggle('on', t==='day');
+function setTheme(){
+  settings.theme = 'night';
+  document.body.classList.remove('day');
+  $('theme-night').classList.add('on');
   if(ngMap){
     const tile = ngMap._layers && Object.values(ngMap._layers).find(l=>l._url);
-    // 切换高德瓦片风格：夜间深色 style=8 / 白天标准 style=7
+    // 固定高德瓦片为夜间深色风格 style=8
     if(tile && tile._url){
-      const nu = tile._url.replace(/style=\d/, 'style='+(t==='day'?'7':'8'));
+      const nu = tile._url.replace(/style=\d/, 'style=8');
       tile.setUrl(nu);
     }
   }
   saveSettings();
-  toast(t==='day'?'已切换为白天模式':'已切换为夜色模式');
 }
 function renderIconCustom(){
   $('icon-custom-list').innerHTML = ICON_TYPES.map(t=>{
@@ -1437,7 +1436,7 @@ function toggleSetting(k){
   saveSettings();
 }
 function renderSettings(){
-  setTheme(settings.theme);
+  setTheme();
   renderIconCustom();
   document.querySelectorAll('.sos-cd').forEach(b=>b.classList.toggle('on', +b.dataset.v===settings.sosCd));
   ['voice','follow','acc','radar'].forEach(k=>{ const el=$('tg-'+k); if(el) el.classList.toggle('on', !!settings[k]); });
@@ -2119,7 +2118,7 @@ function dismissSplash(){
 
 /* ================= 初始化 ================= */
 loadSettings();
-setTheme(settings.theme);
+setTheme();
 applyIconStyles();
 renderChips();
 renderShop();
